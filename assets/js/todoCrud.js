@@ -150,7 +150,7 @@ window.addNuevoEmpleado = async function (event) {
     const dataJSON = Object.fromEntries(formData.entries());
 
     try {
-        await addEmpleado(dataJSON.curso, dataJSON.nombre, dataJSON.dni, dataJSON.obs );
+        await addEmpleado(dataJSON.curso, dataJSON.nombre, dataJSON.dni, dataJSON.obs, -1 ); //-1 sin id de huella asigando
         formulario.reset();
         
         const modalElt = document.getElementById("agregarEmpleadoModal");
@@ -194,11 +194,11 @@ async function getEmpleadoUpdateCollection(id) {
         const empleadoDoc = await getEmpleadoCollection(id);
         if (empleadoDoc.exists()) {
             const data = empleadoDoc.val();
-            document.querySelector("#idEmpleado").value = id;
-            document.querySelector("#curso").value = "Cambiar esto";
-            document.querySelector("#nombre").value = data.nombre;
-            document.querySelector("#dni").value = data.dni;
-            document.querySelector("#obs").value = data.obs;
+            document.querySelector('[name="idEmpleado"]').value = id;
+            document.querySelector('[name="curso"]').value = data.curso;
+            document.querySelector('[name="nombre"]').value = data.nombre;
+            document.querySelector('[name="dni"]').value = data.dni;
+            document.querySelector('[name="obs"]').value = data.obs;
         }
     } catch (error) {
         console.error("Error al obtener datos para editar:", error);
