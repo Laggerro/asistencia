@@ -30,8 +30,8 @@ const nodoPrincipal = "tbl_alumnos";
  */
 
 // CREATE: Agrega un nuevo alumno. 
-export const addalumno = (curso, nombre, dni, obs) => {
-    return push(ref(db, nodoPrincipal), { curso, nombre, dni, obs });
+export const addalumno = (curso, nombre, dni, obs, huellaId) => {
+    return push(ref(db, nodoPrincipal), { curso, nombre, dni, obs, huellaId: huellaId });
 };
 
 export const getalumnosCollection = () => {
@@ -50,4 +50,9 @@ export const updatealumnoCollection = (id, newFields) => {
 // DELETE: Elimina el registro por ID.
 export const deletealumnoCollection = (id) => {
     return remove(ref(db, `${nodoPrincipal}/${id}`));
+};
+
+export const getAsistenciasHoy = () => {
+    const dbRef = ref(db, "asistencia"); // Nombre exacto de tu tabla
+    return get(dbRef);
 };
