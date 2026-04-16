@@ -1,4 +1,4 @@
-    <div class="modal fade" id="editarEmpleadoModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" >
+    <div class="modal fade" id="editaralumnoModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" >
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
@@ -6,8 +6,8 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="formularioEmpleadoEdit" action="" method="POST" autocomplete="off">
-                        <input type="hidden" name="idEmpleado" id="idEmpleado" />
+                    <form id="formularioalumnoEdit" action="" method="POST" autocomplete="off">
+                        <input type="hidden" name="idalumno" id="idalumno" />
                         
                         <div class="mb-3">
                             <label class="form-label">Seleccione el Curso</label>
@@ -48,8 +48,8 @@
 
 
                         <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary btn_add" onclick="window.actualizarEmpleado(event)">
-                                Actualizar datos del empleado
+                            <button type="submit" class="btn btn-primary btn_add" onclick="window.actualizaralumno(event)">
+                                Actualizar datos del alumno
                             </button>
                         </div>
                     </form>

@@ -1,19 +1,19 @@
 import {
-    addEmpleado,
-    getEmpleadosCollection,
-    deleteEmpleadoCollection,
-    getEmpleadoCollection,
-    updateEmpleadoCollection,
+    addalumno,
+    getalumnosCollection,
+    deletealumnoCollection,
+    getalumnoCollection,
+    updatealumnoCollection,
 } from "./firebase.js";
 
 /**
  * Función para refrescar la tabla después de cualquier acción
  */
 async function refrescarTabla() {
-    await mostrarEmpleadosEnHTML();
+    await mostraralumnosEnHTML();
 }
 
-window.miModal = async function (idModal, idEmpleado = "") {
+window.miModal = async function (idModal, idalumno = "") {
     try {
         // 1. Limpieza de seguridad
         const existing = document.getElementById(idModal);
@@ -27,10 +27,10 @@ window.miModal = async function (idModal, idEmpleado = "") {
         // 2. Cargar el PHP
         let url = "";
         switch (idModal) {
-            case "agregarEmpleadoModal": url = "modales/modalAdd.php"; break;
-            case "detalleEmpleadoModal": url = "modales/modalDetalles.php"; break;
-            case "editarEmpleadoModal": url = "modales/modalEditar.php"; break;
-            case "eliminarEmpleadoModal": url = "modales/modalDelete.php"; break;
+            case "agregaralumnoModal": url = "modales/modalAdd.php"; break;
+            case "detallealumnoModal": url = "modales/modalDetalles.php"; break;
+            case "editaralumnoModal": url = "modales/modalEditar.php"; break;
+            case "eliminaralumnoModal": url = "modales/modalDelete.php"; break;
             default: return;
         }
 
@@ -56,13 +56,13 @@ window.miModal = async function (idModal, idEmpleado = "") {
         myModal.show();
 
         // 5. Cargar datos según corresponda
-        if (idModal === "detalleEmpleadoModal") {
-            await cargarDetalleEmpleado(idEmpleado);
-        } else if (idModal === "editarEmpleadoModal") {
-            await getEmpleadoUpdateCollection(idEmpleado);
-        } else if (idModal === "eliminarEmpleadoModal") {
+        if (idModal === "detallealumnoModal") {
+            await cargarDetallealumno(idalumno);
+        } else if (idModal === "editaralumnoModal") {
+            await getalumnoUpdateCollection(idalumno);
+        } else if (idModal === "eliminaralumnoModal") {
             const btn = modalElement.querySelector("#confirmDeleteBtn");
-            if (btn) btn.onclick = async () => { await eliminarEmpleado(idEmpleado); myModal.hide(); };
+            if (btn) btn.onclick = async () => { await eliminaralumno(idalumno); myModal.hide(); };
         }
 
     } catch (error) {
@@ -70,40 +70,40 @@ window.miModal = async function (idModal, idEmpleado = "") {
     }
 };
 
-async function mostrarEmpleadosEnHTML() {
+async function mostraralumnosEnHTML() {
     try {
-        const queryCollection = await getEmpleadosCollection();
-        const tablaEmpleados = document.querySelector("#tablaEmpleados tbody");
-        if (!tablaEmpleados) return;
+        const queryCollection = await getalumnosCollection();
+        const tablaalumnos = document.querySelector("#tablaalumnos tbody");
+        if (!tablaalumnos) return;
 
-        tablaEmpleados.innerHTML = "";
+        tablaalumnos.innerHTML = "";
 
         queryCollection.forEach((doc) => {
-            const empleado = doc.val();
+            const alumno = doc.val();
             const id = doc.key;
             const fila = document.createElement("tr");
             fila.id = id; 
             fila.innerHTML = `
-                <td>${empleado.curso}</td>
-                <td>${empleado.nombre}</td>
-                <td>${empleado.dni}</td>
-                <td>${empleado.obs}</td>
+                <td>${alumno.curso}</td>
+                <td>${alumno.nombre}</td>
+                <td>${alumno.dni}</td>
+                <td>${alumno.obs}</td>
                 <td>
-                    <a title="Ver detalles" href="#" onclick="window.miModal('detalleEmpleadoModal','${id}')" class="btn btn-success btn-sm">
+                    <a title="Ver detalles" href="#" onclick="window.miModal('detallealumnoModal','${id}')" class="btn btn-success btn-sm">
                         <i class="bi bi-binoculars"></i>
                     </a>
-                    <a title="Editar" href="#" onclick="window.miModal('editarEmpleadoModal','${id}')" class="btn btn-warning btn-sm">
+                    <a title="Editar" href="#" onclick="window.miModal('editaralumnoModal','${id}')" class="btn btn-warning btn-sm">
                         <i class="bi bi-pencil-square"></i>
                     </a>
-                    <a title="Eliminar" href="#" onclick="window.miModal('eliminarEmpleadoModal','${id}')" class="btn btn-danger btn-sm">
+                    <a title="Eliminar" href="#" onclick="window.miModal('eliminaralumnoModal','${id}')" class="btn btn-danger btn-sm">
                         <i class="bi bi-trash"></i>
                     </a> 
                 </td>
             `;
-            tablaEmpleados.appendChild(fila);
+            tablaalumnos.appendChild(fila);
         });
     } catch (error) {
-        console.error("Error al obtener los empleados:", error);
+        console.error("Error al obtener los alumnos:", error);
     }
 }
 
@@ -137,23 +137,23 @@ window.mostrarAlerta = function ({ tipoToast, mensaje }) {
     }
 };
 
-// ... resto de tus funciones (addNuevoEmpleado, etc.)
+// ... resto de tus funciones (addNuevoalumno, etc.)
 
 
 /**
- * CREATE: Agrega un nuevo empleado
+ * CREATE: Agrega un nuevo alumno
  */
-window.addNuevoEmpleado = async function (event) {
+window.addNuevoalumno = async function (event) {
     event.preventDefault();
-    const formulario = document.querySelector("#formularioEmpleado");
+    const formulario = document.querySelector("#formularioalumno");
     const formData = new FormData(formulario);
     const dataJSON = Object.fromEntries(formData.entries());
 
     try {
-        await addEmpleado(dataJSON.curso, dataJSON.nombre, dataJSON.dni, dataJSON.obs, -1 ); //-1 sin id de huella asigando
+        await addalumno(dataJSON.curso, dataJSON.nombre, dataJSON.dni, dataJSON.obs, -1 ); //-1 sin id de huella asigando
         formulario.reset();
         
-        const modalElt = document.getElementById("agregarEmpleadoModal");
+        const modalElt = document.getElementById("agregaralumnoModal");
         bootstrap.Modal.getInstance(modalElt).hide();
         
         window.mostrarAlerta({ tipoToast: "success", mensaje: "¡Alumno registrado con éxito!" });
@@ -164,14 +164,14 @@ window.addNuevoEmpleado = async function (event) {
 };
 
 /**
- * READ ONE: Detalles del empleado
+ * READ ONE: Detalles del alumno
  */
-async function cargarDetalleEmpleado(id) {
+async function cargarDetallealumno(id) {
     try {
-        const empleadoDoc = await getEmpleadoCollection(id);
-        if (empleadoDoc.exists()) {
-            const data = empleadoDoc.val();
-            const contenedor = document.querySelector("#detalleEmpleadoContenido ul");
+        const alumnoDoc = await getalumnoCollection(id);
+        if (alumnoDoc.exists()) {
+            const data = alumnoDoc.val();
+            const contenedor = document.querySelector("#detallealumnoContenido ul");
             if (!contenedor) return;
 
             contenedor.innerHTML = ` 
@@ -189,12 +189,12 @@ async function cargarDetalleEmpleado(id) {
 /**
  * UPDATE: Cargar datos en el formulario de edición
  */
-async function getEmpleadoUpdateCollection(id) {
+async function getalumnoUpdateCollection(id) {
     try {
-        const empleadoDoc = await getEmpleadoCollection(id);
-        if (empleadoDoc.exists()) {
-            const data = empleadoDoc.val();
-            document.querySelector('[name="idEmpleado"]').value = id;
+        const alumnoDoc = await getalumnoCollection(id);
+        if (alumnoDoc.exists()) {
+            const data = alumnoDoc.val();
+            document.querySelector('[name="idalumno"]').value = id;
             document.querySelector('[name="curso"]').value = data.curso;
             document.querySelector('[name="nombre"]').value = data.nombre;
             document.querySelector('[name="dni"]').value = data.dni;
@@ -206,18 +206,18 @@ async function getEmpleadoUpdateCollection(id) {
 }
 
 /**
- * UPDATE: Guardar cambios del empleado
+ * UPDATE: Guardar cambios del alumno
  */
-window.actualizarEmpleado = async function (event) {
+window.actualizaralumno = async function (event) {
     event.preventDefault();
-    const formulario = document.querySelector("#formularioEmpleadoEdit");
+    const formulario = document.querySelector("#formularioalumnoEdit");
     const formData = new FormData(formulario);
-    const { idEmpleado, ...datosNuevos } = Object.fromEntries(formData.entries());
+    const { idalumno, ...datosNuevos } = Object.fromEntries(formData.entries());
 
     try {
-        await updateEmpleadoCollection(idEmpleado, datosNuevos);
+        await updatealumnoCollection(idalumno, datosNuevos);
         
-        const modalElt = document.getElementById("editarEmpleadoModal");
+        const modalElt = document.getElementById("editaralumnoModal");
         bootstrap.Modal.getInstance(modalElt).hide();
         
         window.mostrarAlerta({ tipoToast: "success", mensaje: "¡Alumno actualizado!" });
@@ -228,11 +228,11 @@ window.actualizarEmpleado = async function (event) {
 };
 
 /**
- * DELETE: Borrar empleado
+ * DELETE: Borrar alumno
  */
-async function eliminarEmpleado(id) {
+async function eliminaralumno(id) {
     try {
-        await deleteEmpleadoCollection(id);
+        await deletealumnoCollection(id);
         window.mostrarAlerta({ tipoToast: "success", mensaje: "Alumno eliminado correctamente" });
         await refrescarTabla();
     } catch (error) {
@@ -242,4 +242,4 @@ async function eliminarEmpleado(id) {
 }
 
 // Inicialización
-window.addEventListener("DOMContentLoaded", mostrarEmpleadosEnHTML);
+window.addEventListener("DOMContentLoaded", mostraralumnosEnHTML);

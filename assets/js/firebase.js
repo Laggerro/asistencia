@@ -23,31 +23,31 @@ const firebaseConfig = {
 // Initialize
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-const nodoPrincipal = "tbl_empleados";
+const nodoPrincipal = "tbl_alumnos";
 
 /** 
  * ACCIONES CRUD ADAPTADAS
  */
 
-// CREATE: Agrega un nuevo empleado. 
-export const addEmpleado = (curso, nombre, dni, obs) => {
+// CREATE: Agrega un nuevo alumno. 
+export const addalumno = (curso, nombre, dni, obs) => {
     return push(ref(db, nodoPrincipal), { curso, nombre, dni, obs });
 };
 
-export const getEmpleadosCollection = () => {
+export const getalumnosCollection = () => {
     return get(ref(db, nodoPrincipal));
 };
 
-export const getEmpleadoCollection = (id) => {
+export const getalumnoCollection = (id) => {
     return get(ref(db, `${nodoPrincipal}/${id}`));
 };
 
 // UPDATE: Actualiza campos específicos usando el ID.
-export const updateEmpleadoCollection = (id, newFields) => {
+export const updatealumnoCollection = (id, newFields) => {
     return update(ref(db, `${nodoPrincipal}/${id}`), newFields);
 };
 
 // DELETE: Elimina el registro por ID.
-export const deleteEmpleadoCollection = (id) => {
+export const deletealumnoCollection = (id) => {
     return remove(ref(db, `${nodoPrincipal}/${id}`));
 };

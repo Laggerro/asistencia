@@ -1,4 +1,4 @@
-    <div class="modal fade" id="agregarEmpleadoModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel">
+    <div class="modal fade" id="agregaralumnoModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
@@ -6,7 +6,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="formularioEmpleado" action="" method="POST" autocomplete="off">
+                    <form id="formularioalumno" action="" method="POST" autocomplete="off">
                         <div class="mb-3">
                             <label class="form-label">Seleccione el Curso</label>
                             <select name="curso" class="form-select" required>
@@ -45,7 +45,7 @@
                         </div>
                                                
                         <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary btn_add" onclick="window.addNuevoEmpleado(event)">
+                            <button type="submit" class="btn btn-primary btn_add" onclick="window.addNuevoalumno(event)">
                                 Registrar nuevo Alumno
                             </button>
                         </div>
