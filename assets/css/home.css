@@ -1,36 +1,85 @@
 body {
   background-color: #cbd5e0 !important;
+   padding-top: 40px; /* Ajusta este valor según el alto de tu menú */
 }
+
+/* --- ESTILOS PARA EL NAVBAR --- */
+.navbar {
+  padding: 0.8rem 0;
+  margin-bottom: 20px; /* Separación del contenido */
+}
+
+/* Asegurar que los links se vean (Texto blanco/grisáceo) */
+.navbar-nav .nav-link {
+  color: rgba(255, 255, 255, 0.8) !important;
+  font-weight: 500;
+  position: relative;
+  transition: color 0.3s ease;
+}
+
+.navbar-nav .nav-link:hover,
+.navbar-nav .nav-link.active {
+  color: #fff !important;
+}
+
+/* Línea azul animada */
+.navbar-nav .nav-link::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: 5px;
+  left: 8px;
+  right: 8px;
+  background-color: #0d6efd;
+  transition: width 0.3s ease;
+}
+
+.navbar-nav .nav-link:hover::after,
+.navbar-nav .nav-link.active::after {
+  width: 80%;
+}
+
+/* --- TUS ESTILOS EXISTENTES --- */
 .container {
   background-color: #fff !important;
   padding: 20px;
   border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* Agregado para más modernidad */
 }
+
 label {
   display: flex;
   justify-content: flex-start;
 }
+
 .btn_add {
   width: 100%;
   border: 1px solid #333 !important;
   background-color: #333 !important;
 }
+
 .btn_add:hover {
   opacity: 0.8;
 }
+
 .btn-success {
   border: 1px solid #06c046 !important;
   background-color: #06c046 !important;
 }
+
 hr {
-  height: 0.1px !important;
-  color: #f0db4f !important;
+  height: 1px !important; /* Ajustado de 0.1 a 1 para que sea visible */
+  color: #4409e9 !important;
   width: 100% !important;
-  background-color: red;
+  background-color: #4409e9 !important; /* Cambié red por el amarillo que usas */
+  opacity: 1;
 }
+
 .bi-arrow-right-circle {
   font-size: 30px;
 }
+
 .titulo_modal {
   width: 100%;
   display: flex;
@@ -40,9 +89,7 @@ hr {
   font-size: 20px;
   text-align: center;
 }
-thead tr th {
-  text-align: start !important;
-}
-tr td {
+
+thead tr th, tr td {
   text-align: start !important;
 }

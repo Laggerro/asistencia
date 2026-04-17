@@ -6,7 +6,9 @@ import {
     push, 
     get, 
     remove, 
-    update 
+    update, 
+    query,        
+    orderByChild  
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-database.js";
 
 // YOUR REAL CREDENTIALS (The ones you found in the console)
@@ -34,9 +36,6 @@ export const addalumno = (curso, nombre, dni, obs, huellaId) => {
     return push(ref(db, nodoPrincipal), { curso, nombre, dni, obs, huellaId: huellaId });
 };
 
-export const getalumnosCollection = () => {
-    return get(ref(db, nodoPrincipal));
-};
 
 export const getalumnoCollection = (id) => {
     return get(ref(db, `${nodoPrincipal}/${id}`));
@@ -55,4 +54,10 @@ export const deletealumnoCollection = (id) => {
 export const getAsistenciasHoy = () => {
     const dbRef = ref(db, "asistencia"); // Nombre exacto de tu tabla
     return get(dbRef);
+};
+
+export const getalumnosCollection = () => {
+    const alumnosRef = ref(db, 'tbl_alumnos'); // O usa la variable 'nodoPrincipal' si la tienes definida
+    const consultaOrdenada = query(alumnosRef, orderByChild('dni'));
+    return get(consultaOrdenada);
 };
