@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Panel de Control ESP32</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; text-align: center; background: #f4f4f9; }
+        .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .user-card { border-bottom: 1px solid #eee; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+        button { background: #4CAF50; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; }
+        button:disabled { background: #ccc; }
+        #status { margin-top: 20px; font-weight: bold; color: #555; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Enrolamiento RS307</h1>
+        <div id="user-list">Buscando alumnos sin huella...</div>
+        <div id="status">Estado: Listo</div>
+    </div>
+    <script>
+        function loadUsers() {
+            fetch('/get_users').then(r => r.json()).then(users => {
+                let html = '';
+                for (let key in users) {
+                    if (users[key].id_huella === -1) {
+                        html += `<div class="user-card">
+                            <span>${users[key].nombre}</span>
+                            <button onclick="startEnrol('${key}')">Enrolar</button>
+                        </div>`;
+                    }
+                }
+                document.getElementById('user-list').innerHTML = html || 'No hay alumnos para enrolar.';
+            });
+        }
+
+        function startEnrol(uid) {
+            const status = document.getElementById('status');
+            status.innerText = "Estado: Coloque el dedo...";
+            fetch(`/enrol?uid=${uid}`)
+                .then(r => r.text())
+                .then(res => { status.innerText = "Estado: " + res; loadUsers(); });
+        }
+        setInterval(loadUsers, 5000);
+        loadUsers();
+    </script>
+</body>
+</html>

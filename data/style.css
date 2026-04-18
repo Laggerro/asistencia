@@ -1,0 +1,10 @@
+body { font-family: sans-serif; background-color: #f4f4f9; padding: 20px; }
+.container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+h1 { color: #333; text-align: center; }
+table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+th, td { padding: 12px; border-bottom: 1px solid #ddd; text-align: left; }
+th { background-color: #007bff; color: white; }
+tr:hover { background-color: #f1f1f1; }
+.btn-enrol { background: #28a745; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; }
+.btn-enrol:hover { background: #218838; }
+#status { text-align: center; font-weight: bold; color: #666; }
