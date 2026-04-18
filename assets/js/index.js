@@ -1,32 +1,37 @@
-
 import { getalumnosCollection, getAsistenciasHoy } from "./firebase.js";
 
 async function calcularProgresoPorCurso() {
     try {
-        // 1. Obtenemos datos de alumnos y asistencias
         const [snapAlumnos, snapAsistencias] = await Promise.all([
             getalumnosCollection(),
             getAsistenciasHoy()
         ]);
 
-        // 2. Identificar huellas que ficharon HOY
+        // Guardamos los IDs como NÚMEROS para que la comparación sea más fácil
         const huellasPresentesHoy = new Set();
-        const fechaHoy = new Date().toISOString().split('T')[0];
+        const hoy = new Date();
+        const fechaHoyFormateada = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
+        
+        console.log("Buscando fichajes para hoy:", fechaHoyFormateada);
 
         snapAsistencias.forEach(doc => {
-            const data = doc.val();
-            let fechaFichaje = "";
-            if (typeof data.timestamp === 'number') {
-                fechaFichaje = new Date(data.timestamp).toISOString().split('T')[0];
-            } else {
-                fechaFichaje = String(data.timestamp);
-            }
-            if (fechaFichaje.includes(fechaHoy)) {
-                huellasPresentesHoy.add(String(data.id_user));
+            const registro = doc.val();
+            if (registro && registro.fichada) {
+                const partes = registro.fichada.split(',');
+                if (partes.length >= 2) {
+                    const idAlumno = partes[0].trim();
+                    const fechaCompleta = partes[1].trim();
+
+                    if (fechaCompleta.includes(fechaHoyFormateada)) {
+                        // Guardamos como NÚMERO
+                        huellasPresentesHoy.add(Number(idAlumno));
+                    }
+                }
             }
         });
 
-        // 3. Contadores para el gráfico y la tabla
+        console.log("IDs presentes hoy (como números):", Array.from(huellasPresentesHoy));
+
         let totalPresentes = 0;
         let totalAusentes = 0;
         let totalSinHuella = 0;
@@ -34,128 +39,92 @@ async function calcularProgresoPorCurso() {
 
         snapAlumnos.forEach(doc => {
             const alumno = doc.val();
-            const hId = String(alumno.huellaId);
+            // Convertimos el ID del alumno a NÚMERO para comparar
+            const hIdRaw = alumno.huellaId;
+            const hIdNum = Number(hIdRaw);
             const cursoNombre = alumno.curso || "Sin Curso";
 
-            // Lógica para contadores del Gráfico (Todos los alumnos)
-            if (hId === "-1") {
-                totalSinHuella++;
-            } else if (huellasPresentesHoy.has(hId)) {
-                totalPresentes++;
-            } else {
-                totalAusentes++;
+            // DEBUG: Solo para los primeros alumnos, ver qué traen
+            if (totalPresentes + totalAusentes < 5) {
+                console.log(`Alumno: ${alumno.nombre || 'S/N'} - huellaId original: ${hIdRaw} - convertido: ${hIdNum}`);
             }
 
-            // Lógica para la Tabla (Excluye a los -1)
-            if (hId !== "-1") {
-                if (!cursos[cursoNombre]) {
-                    cursos[cursoNombre] = { total: 0, presentes: 0 };
-                }
-                cursos[cursoNombre].total++;
-                if (huellasPresentesHoy.has(hId)) {
+            if (hIdRaw === "-1" || hIdRaw === -1) {
+                totalSinHuella++;
+            } else {
+                // Comparamos número contra número
+                if (huellasPresentesHoy.has(hIdNum)) {
+                    totalPresentes++;
+                    if (!cursos[cursoNombre]) cursos[cursoNombre] = { total: 0, presentes: 0 };
+                    cursos[cursoNombre].total++;
                     cursos[cursoNombre].presentes++;
+                } else {
+                    totalAusentes++;
+                    if (!cursos[cursoNombre]) cursos[cursoNombre] = { total: 0, presentes: 0 };
+                    cursos[cursoNombre].total++;
                 }
             }
         });
 
-        // 4. Renderizar Gráfico de Torta
+        console.log(`FINAL -> Presentes: ${totalPresentes}, Ausentes: ${totalAusentes}`);
+
         renderizarGrafico(totalPresentes, totalAusentes, totalSinHuella);
-// ... dentro de calcularProgresoPorCurso
-// ... justo después de renderizar el gráfico
-
-
-
-
-const totalAlumnos = totalPresentes + totalAusentes + totalSinHuella;
-const divTotales = document.getElementById("totalesGrafico");
-
-if (divTotales) {
-    divTotales.className = "mt-2 p-3"; // Clases de Bootstrap para margen y relleno
-    divTotales.innerHTML = `
-        <div class="item-total text-dark text-center">
-            Total Alumnos: ${totalAlumnos}
-        </div>
-        <div class="item-dato text-success">
-            <span>Presentes:</span> <span>${totalPresentes}</span>
-        </div>
-        <div class="item-dato text-danger">
-            <span>Ausentes:</span> <span>${totalAusentes}</span>
-        </div>
-        <div class="item-dato text-secondary border-top mt-1 pt-1" style="font-size: 0.9rem;">
-            <span>Sin Huella (-1):</span> <span>${totalSinHuella}</span>
-        </div>
-    `;
-}
-
-
-
-
-
-
-        // 5. Renderizar Tabla por Cursos
-        const tbody = document.querySelector("#tablaProgreso tbody");
-        if (!tbody) return;
-        tbody.innerHTML = "";
-
-        for (const nombreCurso in cursos) {
-            const { total, presentes } = cursos[nombreCurso];
-            const porcentaje = total > 0 ? Math.round((presentes / total) * 100) : 0;
-
-            let colorBarra = "bg-danger";
-            if (porcentaje >= 80) colorBarra = "bg-success";
-            else if (porcentaje >= 50) colorBarra = "bg-warning";
-
-            const fila = `
-                <tr>
-                    <td>
-                        <strong>${nombreCurso}</strong><br>
-                        <small class="text-muted">${presentes} de ${total} alumnos aptos presentes</small>
-                    </td>
-                    <td class="align-middle">
-                        <div class="progress" style="height: 25px;">
-                            <div class="progress-bar progress-bar-striped progress-bar-animated ${colorBarra}" 
-                                 role="progressbar" style="width: ${porcentaje}%">
-                                ${porcentaje}%
-                            </div>
-                        </div>
-                    </td>
-                </tr>`;
-            tbody.innerHTML += fila;
-        }
+        actualizarTotalesUI(totalPresentes, totalAusentes, totalSinHuella);
+        renderizarTablaCursos(cursos);
 
     } catch (error) {
-        console.error("Error al procesar el progreso:", error);
+        console.error("Error general:", error);
+    }
+}
+
+// ... (Las funciones actualizarTotalesUI, renderizarTablaCursos y renderizarGrafico se mantienen igual)
+// Asegúrate de incluirlas al final de tu archivo.
+
+function actualizarTotalesUI(p, a, s) {
+    const div = document.getElementById("totalesGrafico");
+    if (!div) return;
+    div.innerHTML = `
+        <div class="text-center mb-2"><strong>Total Alumnos: ${p + a + s}</strong></div>
+        <div class="d-flex justify-content-between text-success"><span>Presentes:</span> <span>${p}</span></div>
+        <div class="d-flex justify-content-between text-danger"><span>Ausentes:</span> <span>${a}</span></div>
+        <div class="d-flex justify-content-between text-muted border-top mt-2 pt-1">
+            <small>Sin Huella (-1):</small> <small>${s}</small>
+        </div>`;
+}
+
+function renderizarTablaCursos(cursos) {
+    const tbody = document.querySelector("#tablaProgreso tbody");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+    for (const nombre in cursos) {
+        const { total, presentes } = cursos[nombre];
+        const porc = total > 0 ? Math.round((presentes / total) * 100) : 0;
+        const color = porc >= 80 ? "bg-success" : (porc >= 50 ? "bg-warning" : "bg-danger");
+        tbody.innerHTML += `
+            <tr>
+                <td><strong>${nombre}</strong><br><small>${presentes} de ${total} presentes</small></td>
+                <td class="align-middle">
+                    <div class="progress" style="height: 20px;">
+                        <div class="progress-bar ${color}" style="width: ${porc}%">${porc}%</div>
+                    </div>
+                </td>
+            </tr>`;
     }
 }
 
 function renderizarGrafico(p, a, s) {
     const canvas = document.getElementById('graficoGeneral');
-    if (!canvas) return;
-
-    // Intentamos obtener la clase Chart de la ventana global
-    const MiChart = window.Chart;
-
-    if (typeof MiChart === 'undefined') {
-        console.error("Error: El archivo chart.umd.js no se cargó correctamente.");
-        canvas.parentElement.innerHTML = "<p>Error al cargar el archivo de gráficos.</p>";
-        return;
-    }
-
-    new MiChart(canvas, {
+    if (!canvas || !window.Chart) return;
+    const existingChart = window.Chart.getChart(canvas);
+    if (existingChart) existingChart.destroy();
+    new window.Chart(canvas, {
         type: 'pie',
         data: {
             labels: ['Presentes', 'Ausentes', 'Sin Huella'],
-            datasets: [{
-                data: [p, a, s],
-                backgroundColor: ['#198754', '#dc3545', '#6c757d']
-            }]
+            datasets: [{ data: [p, a, s], backgroundColor: ['#198754', '#dc3545', '#6c757d'] }]
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false
-        }
+        options: { responsive: true, maintainAspectRatio: false }
     });
 }
-
 
 window.addEventListener("DOMContentLoaded", calcularProgresoPorCurso);
