@@ -1,97 +1,113 @@
-// Configuración de tu Firebase
-// Esperar a que toda la página y librerías externas carguen
-window.onload = function() {
-    
+window.onload = function () {
     // 1. Configuración de Firebase
-    const firebaseConfig = {
-        databaseURL: "https://asistencia-93328-default-rtdb.firebaseio.com"
-   };
+    const firebaseConfig = { 
+        databaseURL: "https://asistencia-93328-default-rtdb.firebaseio.com" 
+    };
 
-    // INICIALIZACIÓN CORRECTA PARA VERSIÓN COMPAT
     if (typeof firebase !== 'undefined') {
         firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
         
-        // Aquí está el cambio: nos aseguramos de llamar al módulo correctamente
-        const db = firebase.database(); 
-
-        const listaBody = document.getElementById('lista-alumnos');
+        const listaEnrolar = document.getElementById('lista-alumnos');
+        const listaBorrar = document.getElementById('lista-borrar');
         const statusMsg = document.getElementById('status');
 
-        console.log("Conectado a Firebase Realtime Database");
-
-
-        // 2. Escuchar cambios en la tabla tbl_alumnos
+        // 2. Escuchar cambios en la base de datos
         db.ref('tbl_alumnos').on('value', (snapshot) => {
-            listaBody.innerHTML = '';
-            let count = 0;
+            listaEnrolar.innerHTML = '';
+            listaBorrar.innerHTML = '';
+            let countEnrolar = 0;
+            let countBorrar = 0;
 
             snapshot.forEach((childSnapshot) => {
                 const uid = childSnapshot.key;
                 const data = childSnapshot.val();
 
-                // Filtrar solo los que tienen huellId == -1
-                if (data.huellaId === -1) {
-                    count++;
-                    const row = `
+                // PRIORIDAD 1: Si la observación es exactamente "Borrar"
+                if (data.obs === "Borrar") {
+                    countBorrar++;
+                    
+                    // Decidimos qué función llamar según si tiene huella o no
+                    const funcionClick = (data.huellaId === -1) 
+                        ? `borrarSoloFirebase('${uid}')` 
+                        : `borrarConSensor('${uid}')`;
+
+                    listaBorrar.innerHTML += `
                         <tr>
                             <td>${data.nombre || 'Sin nombre'}</td>
-                            <td>${data.curso || '-'}</td>
                             <td>${data.dni || '-'}</td>
-                            <td>${data.obs || ''}</td>
-                            <td>
-                                <button class="btn-enrol" onclick="enrolar('${uid}')">Enrolar</button>
-                            </td>
-                        </tr>
-                    `;
-                    listaBody.innerHTML += row;
+                            <td><button class="btn-borrar" onclick="${funcionClick}">Borrar</button></td>
+                        </tr>`;
+                }
+                // PRIORIDAD 2: Si no es para borrar, pero no tiene huellaId (-1)
+                else if (data.huellaId === -1) {
+                    countEnrolar++;
+                    listaEnrolar.innerHTML += `
+                        <tr>
+                            <td>${data.nombre || 'Sin nombre'}</td>
+                            <td>${data.dni || '-'}</td>
+                            <td><button class="btn-enrolar" onclick="enrolar('${uid}')">Registrar</button></td>
+                        </tr>`;
                 }
             });
 
-            if (count > 0) {
-                statusMsg.innerText = `Se encontraron ${count} alumnos pendientes de enrolar.`;
-                statusMsg.style.color = "#333";
-            } else {
-                statusMsg.innerText = "No hay alumnos para enrolar en este momento.";
-                statusMsg.style.color = "green";
-            }
+            // Actualizar mensajes de estado
+            statusMsg.innerText = `Pendientes: ${countEnrolar} para registrar / ${countBorrar} para borrar.`;
+            statusMsg.style.color = (countEnrolar === 0 && countBorrar === 0) ? "green" : "#333";
+
         }, (error) => {
-            console.error("Error de Firebase:", error);
-            statusMsg.innerText = "Error al leer de Firebase. Revisa la consola.";
+            console.error("Error de Base de datos:", error);
+            statusMsg.innerText = "Error al conectar con la Base de datos.";
             statusMsg.style.color = "red";
         });
-
-    } else {
-        console.error("Firebase no se cargó. Verifica tu conexión a internet.");
-        document.getElementById('status').innerText = "Error: No se pudo cargar Firebase desde Google.";
     }
 };
 
-// 3. Función de Enrolamiento (Global para que el botón la vea)
+// --- CONFIGURACIÓN Y FUNCIONES GLOBALES ---
 
-// 3. Función de Enrolamiento (Global para que el botón la vea)
-window.enrolar = function(uid) {
+const ipESP32 = "192.168.0.65";
+
+// Función para ENROLAR (Llama al ESP32)
+window.enrolar = function (uid) {
+    if (!confirm("¿Iniciar proceso de Registro en el sensor?")) return;
+    ejecutarAccion(`http://${ipESP32}/enrol?uid=${uid}`, "Registro exitoso");
+};
+
+// Función para BORRAR CUANDO SÍ HAY HUELLA (Llama al ESP32)
+window.borrarConSensor = function (uid) {
+    if (!confirm("¿Seguro que deseas borrar la huella del sensor y el registro completo?")) return;
+    ejecutarAccion(`http://${ipESP32}/delete?uid=${uid}`, "Borrado del sensor y base de datos");
+};
+
+// Función para BORRAR CUANDO NO HAY HUELLA (Directo a Firebase, sin ESP32)
+window.borrarSoloFirebase = function (uid) {
+    if (!confirm("Este alumno no tiene huella registrada. ¿Continuar?")) return;
+    
+    firebase.database().ref('tbl_alumnos/' + uid).remove()
+        .then(() => alert("Registro borrado de la base de datos"))
+        .catch(err => alert("Error al borrar: " + err));
+};
+
+// Función genérica para peticiones al ESP32
+function ejecutarAccion(url, mensajeExito) {
     const statusMsg = document.getElementById('status');
-    const ipESP32 = "192.168.0.65"; // Tu IP actual
-    
-    if(!confirm("¿Deseas iniciar el proceso de enrolamiento para este alumno?")) return;
-    
-    statusMsg.innerText = "Esperando al sensor... Pon el dedo cuando el LED parpadee.";
+    statusMsg.innerText = "Comunicando con sensor... espere";
     statusMsg.style.color = "blue";
 
-    // USAR ESTA LÍNEA EXACTA (Fíjate que lleva los acentos graves ` )
-    fetch(`http://${ipESP32}/enrol?uid=${uid}`)
+    fetch(url)
         .then(response => response.text())
         .then(data => {
-            if(data === "OK") {
-                alert("¡Enrolamiento exitoso!");
+            if (data === "OK") {
+                alert(mensajeExito);
             } else {
-                alert("El sensor no capturó la huella: " + data);
-                statusMsg.innerText = "Fallo en el enrolamiento.";
+                alert("Respuesta del sensor: " + data);
+                statusMsg.innerText = "Operación fallida.";
                 statusMsg.style.color = "red";
             }
         })
         .catch(err => {
-            alert("Error de comunicación con el ESP32. ¿Está en la misma red?");
-            console.error("Error fetch:", err);
+            alert("No se pudo conectar con el DISPOSITIVO. Verifique que esté encendido y en la misma red.");
+            console.error("Error Fetch:", err);
+            statusMsg.innerText = "Error de conexión con DISPOSITIVO.";
         });
-};
+}

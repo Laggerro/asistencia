@@ -3,31 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enrolamiento de Huellas</title>
+    <title>Gestión de Huellas</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Firebase SDK (v9 compat) -->
-    <script src="https://gstatic.com/firebasejs/9.15.0/firebase-app-compat.js
-"></script>
+    <script src="https://gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
 </head>
 <body>
     <div class="container">
-        <h1>Alumnos sin Enrolar</h1>
-        <p id="status">Conectando a Firebase...</p>
-        <table id="alumnosTable">
-            <thead>
-                <tr>
-                    <th>Nombre</th>
-                    <th>Curso</th>
-                    <th>DNI</th>
-                    <th>Obs.</th>
-                    <th>Acción</th>
-                </tr>
-            </thead>
-            <tbody id="lista-alumnos">
-                <!-- Se llena con JS -->
-            </tbody>
-        </table>
+        <h1>Gestión de Huellas de Alumnos</h1>
+        <p id="status">Conectando a Base de datos...</p>
+
+        <div class="flex-container">
+            <!-- Tabla Enrolar -->
+            <div class="card">
+                <h2>Alumnos sin Registrar huella</h2>
+                <table id="alumnosTable">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>DNI</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lista-alumnos">
+                        <!-- Se llena con JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Tabla Borrar -->
+            <div class="card card-delete">
+                <h2>Alumnos a Borrar huellas</h2>
+                <table id="borrarTable">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>DNI</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lista-borrar">
+                        <!-- Se llena con JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
     <script src="script.js"></script>
 </body>

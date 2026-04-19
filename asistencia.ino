@@ -46,6 +46,7 @@ void syncTempToFirebase();
 void verificarHuellaAsistencia();
 void handleGetUsers();
 void handleEnrol();
+void handleDelete();
 int findFreeID();
 bool captureStep(int step);
 void blinkLED(int pin, int veces);
@@ -96,6 +97,8 @@ void setup() {
   });
   server.on("/get_users", handleGetUsers);
   server.on("/enrol", handleEnrol);
+  server.on("/delete", handleDelete);
+
 }
 
 void loop() {
@@ -380,4 +383,53 @@ void blinkLED(int pin, int veces) {
     digitalWrite(pin, LOW);
     delay(200);
   }
+}
+
+void handleDelete() {
+    server.sendHeader("Access-Control-Allow-Origin", "*");
+    String uid = server.arg("uid");
+    
+    if (uid == "") {
+        server.send(400, "text/plain", "Falta UID");
+        return;
+    }
+
+    WiFiClientSecure client;
+    client.setInsecure();
+    HTTPClient http;
+
+    // 1. Primero obtenemos el huellaId para saber qué borrar del sensor
+    String urlUser = String(FB_BASE_URL) + "/tbl_alumnos/" + uid + ".json";
+    http.begin(client, urlUser);
+    int httpCode = http.GET();
+    
+    if (httpCode == 200) {
+        String payload = http.getString();
+        StaticJsonDocument<200> doc;
+        deserializeJson(doc, payload);
+        int idSensor = doc["huellaId"]; 
+
+        // 2. Borrar del sensor físico (RS307)
+        if (idSensor > 0 && idSensor <= 1000) {
+            if (finger.deleteModel(idSensor) == FINGERPRINT_OK) {
+                Serial.printf("[OK] ID %d borrado del sensor\n", idSensor);
+            }
+        }
+        http.end(); // Cerramos la conexión del GET
+
+        // 3. ELIMINACIÓN TOTAL de Firebase
+        http.begin(client, urlUser); // Misma URL del usuario
+        int deleteCode = http.sendRequest("DELETE"); // Método DELETE borra el nodo completo
+        
+        if (deleteCode == 200 || deleteCode == 204) {
+            server.send(200, "text/plain", "OK");
+            blinkLED(LED_VERDE, 2);
+            Serial.println("[FIREBASE] Usuario eliminado completamente");
+        } else {
+            server.send(500, "text/plain", "Error al eliminar de Firebase");
+        }
+    } else {
+        server.send(404, "text/plain", "Usuario no encontrado");
+    }
+    http.end();
 }

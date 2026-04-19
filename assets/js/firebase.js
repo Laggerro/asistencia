@@ -48,8 +48,17 @@ export const updatealumnoCollection = (id, newFields) => {
 
 // DELETE: Elimina el registro por ID.
 export const deletealumnoCollection = (id) => {
-    return remove(ref(db, `${nodoPrincipal}/${id}`));
+   return remove(ref(db, `${nodoPrincipal}/${id}`));
 };
+
+// Cambia el estado a "Borrar" para que el ESP32 lo procese
+export const marcarParaBorrar = (id) => {
+  return update(ref(db, `${nodoPrincipal}/${id}`), {
+    obs: "Borrar"
+  });
+};
+
+
 
 export const getAsistenciasHoy = () => {
     const dbRef = ref(db, "asistencia"); // Nombre exacto de tu tabla

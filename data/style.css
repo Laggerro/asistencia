@@ -1,3 +1,4 @@
+/*
 body { font-family: sans-serif; background-color: #f4f4f9; padding: 20px; }
 .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
 h1 { color: #333; text-align: center; }
@@ -8,3 +9,66 @@ tr:hover { background-color: #f1f1f1; }
 .btn-enrol { background: #28a745; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; }
 .btn-enrol:hover { background: #218838; }
 #status { text-align: center; font-weight: bold; color: #666; }
+*/
+body {
+    background-color: #cbd5e0; /* azulclaro de fondo */
+    font-family: sans-serif;
+    margin: 0;
+    padding: 20px;
+}
+
+
+.container {
+    max-width: 1200px;
+    margin: auto;
+}
+
+/* Contenedor flexible */
+.flex-container {
+    display: flex;
+    flex-wrap: wrap; /* Permite que bajen en el celular */
+    gap: 20px;
+    justify-content: center;
+}
+
+/* Estilo de "tarjeta" para las tablas */
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    flex: 1; /* Crecen por igual */
+    min-width: 300px; /* Ancho mínimo para que no se rompan */
+}
+
+h1, h2 { text-align: center; color: #333; }
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+}
+
+/* Botones */
+button {
+    padding: 8px 12px;
+    cursor: pointer;
+    border: none;
+    border-radius: 4px;
+    color: white;
+}
+
+.btn-enrolar { background-color: #28a745; }
+.btn-borrar { background-color: #dc3545; }
+
+/* Responsive: en celulares se apilan */
+@media (max-width: 768px) {
+    .flex-container {
+        flex-direction: column;
+    }
+}
