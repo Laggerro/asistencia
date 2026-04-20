@@ -4,7 +4,7 @@ import {
     deletealumnoCollection,
     getalumnoCollection,
     updatealumnoCollection,
-    marcarParaBorrar,
+    marcarParaBorrar
 } from "./firebase.js";
 
 /**
@@ -64,8 +64,8 @@ window.miModal = async function (idModal, idalumno = "") {
         } else if (idModal === "eliminaralumnoModal") {
             const btn = modalElement.querySelector("#confirmDeleteBtn");
             if (btn) btn.onclick = async () => { 
-                //await eliminaralumno(idalumno); ya no esxiste para borrar
-                await solicitarBorradoHuella(idalumno); 
+                await eliminaralumno(idalumno); 
+                //await solicitarBorradoHuella(idalumno); 
                 myModal.hide();
              };
         }
@@ -235,7 +235,7 @@ window.actualizaralumno = async function (event) {
 /**
  * DELETE: Borrar alumno QUEDA DESABILITADA EL QUE BORRA ES EL ESP DE ESTA MANERA NOS ASEGURAMOS
  * QUE EL BORRADO SE HAGA EN EL ESP, VA A SEGUIR APARECIENDO LISTADO PARA BORRAR
-
+ */
 async function eliminaralumno(id) {
     try {
         await deletealumnoCollection(id);
@@ -246,8 +246,8 @@ async function eliminaralumno(id) {
         window.mostrarAlerta({ tipoToast: "error", mensaje: "Error al eliminar" });
     }
 }
- */
 
+/*
 window.solicitarBorradoHuella = async function (id) {
   try {
     // 1. Primero obtenemos el alumno para ver si tiene huella
@@ -256,9 +256,10 @@ window.solicitarBorradoHuella = async function (id) {
     if (alumnoDoc.exists()) {
       const alumno = alumnoDoc.val();
 
+
       // CASO A: SI NO TIENE HUELLA (huellaId === -1)
       // Usamos la forma que me pasaste que funcionaba antes
-      if (alumno.huellaId === -1) {
+      if (alumno.huellaId === "-1") {
         await deletealumnoCollection(id); // Borrado directo
         window.mostrarAlerta({ 
           tipoToast: "success", 
@@ -270,10 +271,11 @@ window.solicitarBorradoHuella = async function (id) {
       // CASO B: SI TIENE HUELLA (huellaId != -1)
       // Solo marcamos el campo obs para que el ESP se encargue del resto
       else {
+       
         await marcarParaBorrar(id);
         window.mostrarAlerta({ 
           tipoToast: "success", 
-          mensaje: "Enviado a la lista de borrado del sensor" 
+          mensaje: "Enviado a la lista de borrado del sensor: " + alumno.huellaId
         });
         await refrescarTabla();
       }
@@ -284,10 +286,12 @@ window.solicitarBorradoHuella = async function (id) {
   }
 };
 
-
+*/
 
 // Inicialización
 window.addEventListener("DOMContentLoaded", mostraralumnosEnHTML);
+
+
 window.solicitarBorradoHuella = async function(id) {
     try {
         // Marcamos en Firebase que queremos borrarlo

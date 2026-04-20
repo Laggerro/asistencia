@@ -8,7 +8,8 @@ import {
     remove, 
     update, 
     query,        
-    orderByChild  
+    orderByChild //,
+    //MarcarParaBorrar  
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-database.js";
 
 // YOUR REAL CREDENTIALS (The ones you found in the console)
@@ -33,7 +34,7 @@ const nodoPrincipal = "tbl_alumnos";
 
 // CREATE: Agrega un nuevo alumno. 
 export const addalumno = (curso, nombre, dni, obs, huellaId) => {
-    return push(ref(db, nodoPrincipal), { curso, nombre, dni, obs, huellaId: huellaId });
+    return push(ref(db, nodoPrincipal), { curso, nombre, dni, obs, huellaId: huellaId, borrar:"No" });
 };
 
 
@@ -57,8 +58,6 @@ export const marcarParaBorrar = (id) => {
     obs: "Borrar"
   });
 };
-
-
 
 export const getAsistenciasHoy = () => {
     const dbRef = ref(db, "asistencia"); // Nombre exacto de tu tabla
