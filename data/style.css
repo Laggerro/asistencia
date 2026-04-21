@@ -63,8 +63,9 @@ button {
     color: white;
 }
 
-.btn-enrolar { background-color: #28a745; }
+.btn-enrolar { background-color: #2a2cbb; }
 .btn-borrar { background-color: #dc3545; }
+.btn-recuperar { background-color: #28a745; }
 
 /* Responsive: en celulares se apilan */
 @media (max-width: 768px) {

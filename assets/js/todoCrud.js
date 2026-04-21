@@ -32,6 +32,7 @@ window.miModal = async function (idModal, idalumno = "") {
             case "detallealumnoModal": url = "modales/modalDetalles.php"; break;
             case "editaralumnoModal": url = "modales/modalEditar.php"; break;
             case "eliminaralumnoModal": url = "modales/modalDelete.php"; break;
+           
             default: return;
         }
 
@@ -84,8 +85,11 @@ async function mostraralumnosEnHTML() {
         tablaalumnos.innerHTML = "";
 
         queryCollection.forEach((doc) => {
+
             const alumno = doc.val();
+
             const id = doc.key;
+             if (alumno.borrar === "Si") { return; }
             const fila = document.createElement("tr");
             fila.id = id;
             fila.innerHTML = `
@@ -232,82 +236,44 @@ window.actualizaralumno = async function (event) {
     }
 };
 
+
 /**
- * DELETE: Borrar alumno QUEDA DESABILITADA EL QUE BORRA ES EL ESP DE ESTA MANERA NOS ASEGURAMOS
- * QUE EL BORRADO SE HAGA EN EL ESP, VA A SEGUIR APARECIENDO LISTADO PARA BORRAR
+ * DELETE: Lógica principal de borrado
  */
+
+
 async function eliminaralumno(id) {
     try {
-        await deletealumnoCollection(id);
-        window.mostrarAlerta({ tipoToast: "success", mensaje: "Alumno eliminado correctamente" });
+        const snapshot = await getalumnosCollection(); // O la función que uses para traer el alumno
+        // Nota: Si puedes, usa getalumnoById(id) para ser más eficiente
+        
+        // Buscamos los datos del alumno específico en el snapshot o volvemos a consultar
+        const alumnoSnapshot = await getalumnoCollection(id); 
+        if (!alumnoSnapshot.exists()) return;
+        const alumno = alumnoSnapshot.val();
+
+        if (alumno.huellaId === "-1" || alumno.huellaId === -1) {
+            // CASO A: Sin huella -> Borrado físico directo
+            await deletealumnoCollection(id);
+            window.mostrarAlerta({ tipoToast: "success", mensaje: "Alumno eliminado correctamente" });
+        } else {
+            // CASO B: Con huella -> Usamos tu función UPDATE de firebase.js
+            // Pasamos el ID y el objeto con el campo que queremos cambiar
+            await updatealumnoCollection(id, { borrar: "Si" });
+            
+            window.mostrarAlerta({ 
+                tipoToast: "success", 
+                mensaje: "Enviando orden de borrado al sensor ESP" 
+            });
+        }
+
         await refrescarTabla();
     } catch (error) {
-        console.error("Error al borrar:", error);
-        window.mostrarAlerta({ tipoToast: "error", mensaje: "Error al eliminar" });
+        console.error("Error en eliminaralumno:", error);
+        window.mostrarAlerta({ tipoToast: "error", mensaje: "Error al procesar la solicitud" });
     }
 }
-
-/*
-window.solicitarBorradoHuella = async function (id) {
-  try {
-    // 1. Primero obtenemos el alumno para ver si tiene huella
-    const alumnoDoc = await getalumnoCollection(id);
-    
-    if (alumnoDoc.exists()) {
-      const alumno = alumnoDoc.val();
-
-
-      // CASO A: SI NO TIENE HUELLA (huellaId === -1)
-      // Usamos la forma que me pasaste que funcionaba antes
-      if (alumno.huellaId === "-1") {
-        await deletealumnoCollection(id); // Borrado directo
-        window.mostrarAlerta({ 
-          tipoToast: "success", 
-          mensaje: "Alumno eliminado correctamente" 
-        });
-        await refrescarTabla(); // Refrescamos como antes
-      } 
-      
-      // CASO B: SI TIENE HUELLA (huellaId != -1)
-      // Solo marcamos el campo obs para que el ESP se encargue del resto
-      else {
-       
-        await marcarParaBorrar(id);
-        window.mostrarAlerta({ 
-          tipoToast: "success", 
-          mensaje: "Enviado a la lista de borrado del sensor: " + alumno.huellaId
-        });
-        await refrescarTabla();
-      }
-    }
-  } catch (error) {
-    console.error("Error al procesar el borrado:", error);
-    window.mostrarAlerta({ tipoToast: "error", mensaje: "Error al eliminar" });
-  }
-};
-
-*/
 
 // Inicialización
 window.addEventListener("DOMContentLoaded", mostraralumnosEnHTML);
 
-
-window.solicitarBorradoHuella = async function(id) {
-    try {
-        // Marcamos en Firebase que queremos borrarlo
-        await marcarParaBorrar(id); 
-        
-        window.mostrarAlerta({
-            tipoToast: "success",
-            mensaje: "Enviado a la lista de borrado del sensor"
-        });
-        
-        await refrescarTabla();
-    } catch (error) {
-        console.error("Error al solicitar borrado:", error);
-        window.mostrarAlerta({
-            tipoToast: "error",
-            mensaje: "Error al procesar la solicitud"
-        });
-    }
-};

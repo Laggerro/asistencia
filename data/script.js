@@ -19,37 +19,41 @@ window.onload = function () {
             let countEnrolar = 0;
             let countBorrar = 0;
 
-            snapshot.forEach((childSnapshot) => {
-                const uid = childSnapshot.key;
-                const data = childSnapshot.val();
+           snapshot.forEach((childSnapshot) => {
+    const uid = childSnapshot.key;
+    const data = childSnapshot.val();
 
-                // PRIORIDAD 1: Si la observación es exactamente "Borrar"
-                if (data.obs === "Borrar") {
-                    countBorrar++;
-                    
-                    // Decidimos qué función llamar según si tiene huella o no
-                    const funcionClick = (data.huellaId === -1) 
-                        ? `borrarSoloFirebase('${uid}')` 
-                        : `borrarConSensor('${uid}')`;
+    // 1. Lógica para la lista de BORRADO (Si el campo borrar es "Si")
+    if (data.borrar === "Si") {
+        countBorrar++;
+        
+        // Determina si va al sensor o directo a Firebase
+        const funcionBorrar = (data.huellaId === -1 || data.huellaId === "-1") 
+            ? `borrarSoloFirebase('${uid}')` 
+            : `borrarConSensor('${uid}')`;
 
-                    listaBorrar.innerHTML += `
-                        <tr>
-                            <td>${data.nombre || 'Sin nombre'}</td>
-                            <td>${data.dni || '-'}</td>
-                            <td><button class="btn-borrar" onclick="${funcionClick}">Borrar</button></td>
-                        </tr>`;
-                }
-                // PRIORIDAD 2: Si no es para borrar, pero no tiene huellaId (-1)
-                else if (data.huellaId === -1) {
-                    countEnrolar++;
-                    listaEnrolar.innerHTML += `
-                        <tr>
-                            <td>${data.nombre || 'Sin nombre'}</td>
-                            <td>${data.dni || '-'}</td>
-                            <td><button class="btn-enrolar" onclick="enrolar('${uid}')">Registrar</button></td>
-                        </tr>`;
-                }
-            });
+        listaBorrar.innerHTML += `
+            <tr>
+                <td>${data.nombre || 'Sin nombre'}</td>
+                <td>${data.dni || '-'}</td>
+                <td>
+                    <button class="btn-borrar" onclick="${funcionBorrar} ">Borrar</button>
+                    <button class="btn-recuperar" onclick="recuperarAlumno('${uid}')">Recuperar</button>
+                </td>
+            </tr>`;
+    }
+    // 2. Lógica para la lista de ENROLAR (Si NO está para borrar y no tiene huellaId)
+    else if ((data.huellaId === -1 || data.huellaId === "-1") && data.borrar !== "Si") {
+        countEnrolar++;
+        listaEnrolar.innerHTML += `
+            <tr>
+                <td>${data.nombre || 'Sin nombre'}</td>
+                <td>${data.dni || '-'}</td>
+                <td><button class="btn-enrolar" onclick="enrolar('${uid}')">Registrar</button></td>
+            </tr>`;
+    }
+});
+
 
             // Actualizar mensajes de estado
             statusMsg.innerText = `Pendientes: ${countEnrolar} para registrar / ${countBorrar} para borrar.`;
@@ -111,3 +115,17 @@ function ejecutarAccion(url, mensajeExito) {
             statusMsg.innerText = "Error de conexión con DISPOSITIVO.";
         });
 }
+
+window.recuperarAlumno = function (uid) {
+    // Cambia el campo borrar a "No"
+    firebase.database().ref('tbl_alumnos/' + uid).update({
+        borrar: "No"
+    })
+    .then(() => {
+        alert("Alumno recuperado. Volverá al listado general.");
+    })
+    .catch(err => {
+        console.error("Error al recuperar:", err);
+        alert("No se pudo recuperar el registro.");
+    });
+};
