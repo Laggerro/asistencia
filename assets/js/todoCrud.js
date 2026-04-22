@@ -4,7 +4,8 @@ import {
     deletealumnoCollection,
     getalumnoCollection,
     updatealumnoCollection,
-    marcarParaBorrar
+    marcarParaBorrar,
+    getCursosCollection
 } from "./firebase.js";
 
 /**
@@ -76,45 +77,45 @@ window.miModal = async function (idModal, idalumno = "") {
     }
 };
 
-async function mostraralumnosEnHTML() {
-    try {
-        const queryCollection = await getalumnosCollection();
-        const tablaalumnos = document.querySelector("#tablaalumnos tbody");
-        if (!tablaalumnos) return;
+// async function mostraralumnosEnHTML() {
+//     try {
+//         const queryCollection = await getalumnosCollection();
+//         const tablaalumnos = document.querySelector("#tablaalumnos tbody");
+//         if (!tablaalumnos) return;
 
-        tablaalumnos.innerHTML = "";
+//         tablaalumnos.innerHTML = "";
 
-        queryCollection.forEach((doc) => {
+//         queryCollection.forEach((doc) => {
 
-            const alumno = doc.val();
+//             const alumno = doc.val();
 
-            const id = doc.key;
-             if (alumno.borrar === "Si") { return; }
-            const fila = document.createElement("tr");
-            fila.id = id;
-            fila.innerHTML = `
-                <td>${alumno.curso}</td>
-                <td>${alumno.nombre}</td>
-                <td>${alumno.dni}</td>
-                <td>${alumno.obs}</td>
-                <td>
-                    <a title="Ver detalles" href="#" onclick="window.miModal('detallealumnoModal','${id}')" class="btn btn-success btn-sm">
-                        <i class="bi bi-binoculars"></i>
-                    </a>
-                    <a title="Editar" href="#" onclick="window.miModal('editaralumnoModal','${id}')" class="btn btn-warning btn-sm">
-                        <i class="bi bi-pencil-square"></i>
-                    </a>
-                    <a title="Eliminar" href="#" onclick="window.miModal('eliminaralumnoModal','${id}')" class="btn btn-danger btn-sm">
-                        <i class="bi bi-trash"></i>
-                    </a> 
-                </td>
-            `;
-            tablaalumnos.appendChild(fila);
-        });
-    } catch (error) {
-        console.error("Error al obtener los alumnos:", error);
-    }
-}
+//             const id = doc.key;
+//              if (alumno.borrar === "Si") { return; }
+//             const fila = document.createElement("tr");
+//             fila.id = id;
+//             fila.innerHTML = `
+//                 <td>${alumno.curso}</td>
+//                 <td>${alumno.nombre}</td>
+//                 <td>${alumno.dni}</td>
+//                 <td>${alumno.obs}</td>
+//                 <td>
+//                     <a title="Ver detalles" href="#" onclick="window.miModal('detallealumnoModal','${id}')" class="btn btn-success btn-sm">
+//                         <i class="bi bi-binoculars"></i>
+//                     </a>
+//                     <a title="Editar" href="#" onclick="window.miModal('editaralumnoModal','${id}')" class="btn btn-warning btn-sm">
+//                         <i class="bi bi-pencil-square"></i>
+//                     </a>
+//                     <a title="Eliminar" href="#" onclick="window.miModal('eliminaralumnoModal','${id}')" class="btn btn-danger btn-sm">
+//                         <i class="bi bi-trash"></i>
+//                     </a> 
+//                 </td>
+//             `;
+//             tablaalumnos.appendChild(fila);
+//         });
+//     } catch (error) {
+//         console.error("Error al obtener los alumnos:", error);
+//     }
+// }
 
 /**
  * Función para mostrar alertas (Usando iziToast)
@@ -277,3 +278,84 @@ async function eliminaralumno(id) {
 // Inicialización
 window.addEventListener("DOMContentLoaded", mostraralumnosEnHTML);
 
+async function cargarCursosEnSelect() {
+    const select = document.getElementById("filtroCurso");
+    // Asume que tienes una función getCursosCollection en firebase.js
+    const cursosSnap = await getCursosCollection(); 
+    
+    cursosSnap.forEach(doc => {
+        const cursoData = doc.val();
+        const option = document.createElement("option");
+        option.value = cursoData.Curso; // El campo de tu DB
+        option.textContent = cursoData.Curso;
+        select.appendChild(option);
+    });
+}
+
+async function mostraralumnosEnHTML() {
+    try {
+        const queryCollection = await getalumnosCollection();
+        const tablaalumnos = document.querySelector("#tablaalumnos tbody");
+        const filtroCurso = document.getElementById("filtroCurso").value;
+        const busqueda = document.getElementById("buscarAlumno").value.toLowerCase();
+        const spanContador = document.getElementById("contadorAlumnos"); // El nuevo span
+
+        if (!tablaalumnos) return;
+        tablaalumnos.innerHTML = "";
+        
+        let contador = 0; // Inicializamos el contador
+
+        queryCollection.forEach((doc) => {
+            const alumno = doc.val();
+            const id = doc.key;
+
+            // 1. Filtro de borrado lógico
+            if (alumno.borrar === "Si") return;
+
+            // 2. Filtro por Curso
+            if (filtroCurso && alumno.curso !== filtroCurso) return;
+
+            // 3. Filtro por Apellido o DNI
+            const coincideNombre = alumno.nombre.toLowerCase().includes(busqueda);
+            const coincideDNI = alumno.dni.toString().includes(busqueda);
+            if (busqueda && !coincideNombre && !coincideDNI) return;
+
+            // Si llegó aquí, el alumno pasó los filtros
+            contador++; 
+
+            // Construcción de la fila
+            const fila = document.createElement("tr");
+            fila.id = id;
+            fila.innerHTML = `
+                <td>${alumno.curso}</td>
+                <td>${alumno.nombre}</td>
+                <td>${alumno.dni}</td>
+                <td>${alumno.obs}</td>
+                <td>
+                    <a onclick="window.miModal('detallealumnoModal','${id}')" class="btn btn-success btn-sm"><i class="bi bi-binoculars"></i></a>
+                    <a onclick="window.miModal('editaralumnoModal','${id}')" class="btn btn-warning btn-sm"><i class="bi bi-pencil-square"></i></a>
+                    <a onclick="window.miModal('eliminaralumnoModal','${id}')" class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></a>
+                </td>`;
+            tablaalumnos.appendChild(fila);
+        });
+
+        // Actualizamos el número en el HTML al terminar el bucle
+        if (spanContador) {
+            spanContador.textContent = contador;
+        }
+
+    } catch (error) {
+        console.error("Error al obtener alumnos:", error);
+    }
+}
+
+
+
+window.addEventListener("DOMContentLoaded", async () => {
+    await cargarCursosEnSelect(); // Carga el select primero
+    await mostraralumnosEnHTML(); // Muestra la tabla inicial
+
+    // Eventos de filtrado
+    document.getElementById("buscarAlumno").addEventListener("input", mostraralumnosEnHTML);
+    document.getElementById("filtroCurso").addEventListener("change", mostraralumnosEnHTML);
+});

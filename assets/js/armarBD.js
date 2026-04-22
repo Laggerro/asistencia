@@ -9,14 +9,14 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-const asistenciaRef = ref(db, 'asistencia');
+const asistenciaRef = ref(db, 'cursos');
 
 function generarDatos() {
   const registros = [];
   const ahora = new Date();
 
-  for (let i = 0; i < 20; i++) {
-    const id_user = Math.floor(Math.random() * 1000) + 1;
+  for (let i = 0; i < 2; i++) {
+    const Curso = Math.floor(Math.random() * 1000) + 1;
     let timestamp;
 
     if (i < 10) {
@@ -29,7 +29,7 @@ function generarDatos() {
       timestamp = ahora.getTime() - (diasAtras * 24 * 60 * 60 * 1000);
     }
 
-    registros.push({ id_user, timestamp });
+    registros.push({ Curso, timestamp });
   }
   return registros;
 }

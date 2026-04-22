@@ -69,3 +69,9 @@ export const getalumnosCollection = () => {
     const consultaOrdenada = query(alumnosRef, orderByChild('dni'));
     return get(consultaOrdenada);
 };
+
+export const getCursosCollection = () => {
+    const db = getDatabase();
+    const cursosRef = ref(db, 'cursos'); // Asegúrate que 'cursos' sea el nombre de tu nodo en Realtime Database
+    return get(cursosRef);
+};
