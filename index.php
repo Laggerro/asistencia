@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Progreso de Alumnos</title>
+    <title>Asistencia de Alumnos</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
  <script src="assets/js/chart.umd.js"></script>
@@ -11,32 +11,11 @@
 </head>
 <body>
 
-    <!-- Cambia la línea del container dentro del nav -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm fixed-top">
-  <div class="container-fluid px-5"> <!-- Usamos container-fluid para evitar el conflicto del bg-white -->
-    <a class="navbar-brand fw-bold" href="index.html">
-      <i class="bi bi-person-check-fill me-2"></i>Asistencias
-    </a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        <li class="nav-item"><a class="nav-link active" href="index.html">Estado</a></li>
-        <li class="nav-item"><a class="nav-link" href="listado.html">Listado</a></li>
-        <li class="nav-item"><a class="nav-link" href="Registrar.html">Registrar</a></li>
-        <li class="nav-item"><a class="nav-link" href="cursos.html">Cursos</a></li>
-        <li class="nav-item"><a class="nav-link" href="ayuda.html">Ayuda</a></li>
-      </ul>
-      <span class="navbar-text text-white"> <!-- Forzamos texto blanco aquí -->
-        <i class="bi bi-person-circle"></i> Admin
-      </span>
-    </div>
-  </div>
-</nav>
+
+   <?php include 'navbar.php'; ?>
 
     <div class="container mt-5">
-    <h2 class="text-center mb-4">Estado de Asistencias General</h2>
+    <h2 class="text-center mb-4">Estado de Asistencia General</h2>
     
     <div class="row align-items-center">
         <!-- Columna del Gráfico -->
@@ -82,5 +61,6 @@
 
     <!-- Importamos el nuevo JS como módulo -->
     <script type="module" src="assets/js/index.js"></script>
+    
 </body>
 </html>

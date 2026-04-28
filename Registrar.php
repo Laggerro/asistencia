@@ -12,7 +12,7 @@
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
-    <link rel="stylesheet" href="assets/css/listado.css" />
+    <link rel="stylesheet" href="assets/css/registrar.css" />
 
     <!--Libreria para alertas-->
     <link rel="stylesheet" href="assets/alerts/css/iziToast.min.css" />
@@ -20,39 +20,11 @@
 
   <body>
 
-<!-- Menú Superior Moderno -->
-
-
-
-<!-- Cambia la línea del container dentro del nav -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm fixed-top">
-  <div class="container-fluid px-5"> <!-- Usamos container-fluid para evitar el conflicto del bg-white -->
-    <a class="navbar-brand fw-bold" href="home.html">
-      <i class="bi bi-person-check-fill me-2"></i>Asistencias
-    </a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        <li class="nav-item"><a class="nav-link" href="index.html">Estado</a></li>
-        <li class="nav-item"><a class="nav-link" href="listado.html">Listado</a></li>
-        <li class="nav-item"><a class="nav-link active" href="Registrar.html">Registrar</a></li>
-        <li class="nav-item"><a class="nav-link" href="cursos.html">Cursos</a></li>
-        <li class="nav-item"><a class="nav-link" href="ayuda.html">Ayuda</a></li>
-      </ul>
-      <span class="navbar-text text-white"> <!-- Forzamos texto blanco aquí -->
-        <i class="bi bi-person-circle"></i> Admin
-      </span>
-    </div>
-  </div>
-</nav>
-
-<!-- FIN FIN FIN Menú Superior Moderno -->
+<?php include 'navbar.php'; ?>
 
     <h1 class="text-center mt-5 mb-5 fw-bold">
       Agregar Alumnos al sistema
-      <img src="assets/imgs/Agregar.png" alt="firebase" style="width: 50px" />
+      <img src="assets/imgs/Agregar.png" alt="Registrar" style="width: 50px" />
       <hr />
     </h1>
 
@@ -64,17 +36,17 @@
               <a
                 href="#"
                 onclick="window.miModal('agregaralumnoModal','')"
-                class="btn btn-success"
+                class="btn btn-success btn-lg"
                 title="Registrar Nuevo Alumno">
                 <i class="bi bi-person-plus"></i>
               </a>
             </span>
-             Registrar nuevo Alumno
+             Alumnos agregados sin Huella
             <hr />
           </h1>
 
           <div class="table-responsive">
-            <table class="table table-hover" id="tablaalumnos">
+            <table class="table table-hover" id="tablaalumnosSinHuella">
               <thead>
                 <tr>
                   <th>Curso</th>

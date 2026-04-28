@@ -15,49 +15,18 @@
 </head>
 
 <body>
-
-  <!-- Menú Superior Moderno -->
-
-
-
-  <!-- Cambia la línea del container dentro del nav -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm fixed-top">
-    <div class="container-fluid px-5"> <!-- Usamos container-fluid para evitar el conflicto del bg-white -->
-      <a class="navbar-brand fw-bold" href="home.html">
-        <i class="bi bi-person-check-fill me-2"></i>Asistencias
-      </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li class="nav-item"><a class="nav-link" href="index.html">Estado</a></li>
-          <li class="nav-item"><a class="nav-link active" href="listado.html">Listado</a></li>
-          <li class="nav-item"><a class="nav-link" href="Registrar.html">Registrar</a></li>
-          <li class="nav-item"><a class="nav-link" href="cursos.html">Cursos</a></li>
-          <li class="nav-item"><a class="nav-link" href="ayuda.html">Ayuda</a></li>
-        </ul>
-        <span class="navbar-text text-white"> <!-- Forzamos texto blanco aquí -->
-          <i class="bi bi-person-circle"></i> Admin
-        </span>
-      </div>
-    </div>
-  </nav>
-
-  <!-- FIN FIN FIN Menú Superior Moderno -->
+<?php include 'navbar.php'; ?>
 
   <h1 class="text-center mt-5 mb-5 fw-bold">
     Listado General de Alumnos registrados
-    <img src="assets/imgs/Planilla.png" alt="firebase" style="width: 50px" />
+    <img src="assets/imgs/Planilla.png" alt="Listado" style="width: 50px" />
     <hr />
   </h1>
-
-
 
   <div class="container mb-5">
     <div class="row justify-content-md-center">
       <div class="col-md-12">
-    <h5 class="text-center mb-3">Seleccione el filtro</h5>
+    <h5 class="text-center mb-3">Seleccione filtro</h5>
 
     <!-- Todo dentro de este ROW se alineará horizontalmente -->
     <div class="row mb-3 align-items-center">
@@ -75,15 +44,13 @@
 
         <!-- Contador alineado a la derecha -->
         <div class="col-md-4 text-end">
-            <span class="badge bg-primary p-2">
+          <h5>
+            <span class="badge bg-primary p-3">
                 Total coincidencias: <span id="contadorAlumnos">0</span>
             </span>
+          </h5>
         </div>
     </div>
-
-
-
-
 
     
     <hr />

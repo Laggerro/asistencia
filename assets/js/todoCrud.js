@@ -12,7 +12,12 @@ import {
  * Función para refrescar la tabla después de cualquier acción
  */
 async function refrescarTabla() {
-    await mostraralumnosEnHTML();
+    if (document.getElementById("tablaalumnosSinHuella")) {
+        await mostraralumnosSinHuella();
+    }
+    if (document.getElementById("tablaalumnos")) {
+        await mostraralumnosEnHTML();
+    }
 }
 
 window.miModal = async function (idModal, idalumno = "") {
@@ -77,7 +82,7 @@ window.miModal = async function (idModal, idalumno = "") {
     }
 };
 
-// async function mostraralumnosEnHTML() {
+// async function mostraralumnosSinHuella() {
 //     try {
 //         const queryCollection = await getalumnosCollection();
 //         const tablaalumnos = document.querySelector("#tablaalumnos tbody");
@@ -280,7 +285,6 @@ window.addEventListener("DOMContentLoaded", mostraralumnosEnHTML);
 
 async function cargarCursosEnSelect() {
     const select = document.getElementById("filtroCurso");
-    // Asume que tienes una función getCursosCollection en firebase.js
     const cursosSnap = await getCursosCollection(); 
     
     cursosSnap.forEach(doc => {
@@ -350,12 +354,65 @@ async function mostraralumnosEnHTML() {
 }
 
 
-
 window.addEventListener("DOMContentLoaded", async () => {
-    await cargarCursosEnSelect(); // Carga el select primero
-    await mostraralumnosEnHTML(); // Muestra la tabla inicial
-
-    // Eventos de filtrado
-    document.getElementById("buscarAlumno").addEventListener("input", mostraralumnosEnHTML);
-    document.getElementById("filtroCurso").addEventListener("change", mostraralumnosEnHTML);
+    // Si existe la tabla de "Sin Huella", cargamos esa función
+    if (document.getElementById("tablaalumnosSinHuella")) {
+        await mostraralumnosSinHuella();
+    }
+    
+    // Si existe la tabla normal (listado.html), cargamos los filtros normales
+    if (document.getElementById("tablaalumnos")) {
+        await cargarCursosEnSelect(); 
+        await mostraralumnosEnHTML();
+        
+        document.getElementById("buscarAlumno").addEventListener("input", mostraralumnosEnHTML);
+        document.getElementById("filtroCurso").addEventListener("change", mostraralumnosEnHTML);
+    }
 });
+
+
+
+
+
+async function mostraralumnosSinHuella() {
+    try {
+        const queryCollection = await getalumnosCollection();
+        // Usamos el ID exacto que está en tu HTML de registrar.html
+        const tablaalumnos = document.querySelector("#tablaalumnosSinHuella tbody");
+        
+        if (!tablaalumnos) return;
+        tablaalumnos.innerHTML = "";
+
+        queryCollection.forEach((doc) => {
+            const alumno = doc.val();
+            const id = doc.key;
+
+            // Filtros: No borrados Y que tengan huellaId === -1
+            if (alumno.borrar === "Si") return;
+            if (alumno.huellaId !== -1 && alumno.huellaId !== "-1") return;
+
+            const fila = document.createElement("tr");
+            fila.id = id;
+            fila.innerHTML = `
+                <td>${alumno.curso}</td>
+                <td>${alumno.nombre}</td>
+                <td>${alumno.dni}</td>
+                <td>${alumno.obs}</td>
+                <td>
+                    <a title="Ver detalles" onclick="window.miModal('detallealumnoModal','${id}')" class="btn btn-success btn-sm">
+                        <i class="bi bi-binoculars"></i>
+                    </a>
+                    <a title="Editar" onclick="window.miModal('editaralumnoModal','${id}')" class="btn btn-warning btn-sm">
+                        <i class="bi bi-pencil-square"></i>
+                    </a>
+                    <a title="Eliminar" onclick="window.miModal('eliminaralumnoModal','${id}')" class="btn btn-danger btn-sm">
+                        <i class="bi bi-trash"></i>
+                    </a> 
+                </td>
+            `;
+            tablaalumnos.appendChild(fila);
+        });
+    } catch (error) {
+        console.error("Error al obtener los alumnos sin huella:", error);
+    }
+}
