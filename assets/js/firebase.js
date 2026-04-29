@@ -51,6 +51,17 @@ export const deleteCursoCollection = (id) =>
  */
 export const getPreceptoresCollection = () => get(ref(db, coleccionPreceptores));
 
+export const addPreceptor = (nombre, turno, obs) => 
+    push(ref(db, coleccionPreceptor), { nombre, turno, obs });
+
+export const getPreceptorCollection = (id) => get(ref(db, `${coleccionPreceptor}/${id}`));
+
+export const updatePreceptorCollection = (id, newFields) => 
+    update(ref(db, `${coleccionPreceptor}/${id}`), newFields);
+
+export const deletePreceptorCollection = (id) => 
+    remove(ref(db, `${coleccionPreceptor}/${id}`));
+
 /** 
  * --- SECCIÓN ALUMNOS ---
  */

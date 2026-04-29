@@ -23,11 +23,15 @@ $pagina_actual = basename($_SERVER['PHP_SELF']);
         </li>
         
         <li class="nav-item">
-          <a class="nav-link <?php echo ($pagina_actual == 'Registrar.php') ? 'active' : ''; ?>" href="Registrar.php">Registrar</a>
+          <a class="nav-link <?php echo ($pagina_actual == 'registrar.php') ? 'active' : ''; ?>" href="registrar.php">Registrar</a>
         </li>
         
         <li class="nav-item">
-          <a class="nav-link <?php echo ($pagina_actual == 'cursos.php') ? 'active' : ''; ?>" href="cursos.php">Preceptores/Cursos</a>
+          <a class="nav-link <?php echo ($pagina_actual == 'cursos.php') ? 'active' : ''; ?>" href="cursos.php">Cursos</a>
+        </li>
+
+          <li class="nav-item">
+          <a class="nav-link <?php echo ($pagina_actual == 'preceptor.php') ? 'active' : ''; ?>" href="preceptor.php">Preceptores</a>
         </li>
         
         <li class="nav-item">

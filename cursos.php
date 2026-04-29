@@ -19,7 +19,7 @@
   <?php include 'navbar.php'; ?>
 
   <h1 class="text-center mt-5 mb-5 fw-bold">
-   Agregar Cursos
+   Listado de Cursos
     <img src="assets/imgs/Cursos.png" alt="Cursos" style="width: 50px" />
     <hr />
   </h1>
@@ -37,7 +37,7 @@
                 <i class="bi bi-plus-square"></i>
               </a>
             </span>
-            Listado de Cursos
+            Agregar nuevo Curso
             <hr />
           </h1>
 
@@ -46,6 +46,7 @@
               <thead>
                 <tr>
                   <th>Designación del curso</th>
+                  <th>Preceptor asignado</th>
                   <th>Ubicación</th>
                   <th>Capacidad</th>
                   <th>Obs</th>
@@ -61,7 +62,7 @@
     <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    <script type="module" src="assets/js/CrudCurso.js"></script>
+    <script type="module" src="assets/js/todoCrud.js"></script>
     <script src="assets/alerts/js/iziToast.min.js"></script>
   </body>
 </html>
