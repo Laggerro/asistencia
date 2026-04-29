@@ -1,185 +1,288 @@
+// main.js - ARCHIVO UNIFICADO Y LIMPIO
 import {
-    addalumno,
-    getalumnosCollection,
-    deletealumnoCollection,
-    getalumnoCollection,
-    updatealumnoCollection,
-    marcarParaBorrar,
-    getCursosCollection
+    addalumno, getalumnosCollection, deletealumnoCollection, getalumnoCollection, updatealumnoCollection, marcarParaBorrar,
+    addCurso, getCursosCollection, deleteCursoCollection, getCursoCollection, updateCursoCollection,
+    getPreceptoresCollection
 } from "./firebase.js";
 
 /**
- * Función para refrescar la tabla después de cualquier acción
+ * 1. GESTIÓN DE TABLAS (ALUMNOS Y CURSOS)
  */
-async function refrescarTabla() {
-    if (document.getElementById("tablaalumnosSinHuella")) {
-        await mostraralumnosSinHuella();
-    }
-    if (document.getElementById("tablaalumnos")) {
-        await mostraralumnosEnHTML();
+
+async function refrescarTablas() {
+    if (document.getElementById("tablaalumnos")) await mostraralumnosEnHTML();
+    if (document.getElementById("tablaalumnosSinHuella")) await mostraralumnosSinHuella();
+    if (document.getElementById("tablaCursos")) await mostrarCursosEnHTML();
+}
+
+async function mostraralumnosEnHTML() {
+    try {
+        const tabla = document.querySelector("#tablaalumnos tbody");
+        if (!tabla) return;
+
+        const queryCollection = await getalumnosCollection();
+        const filtroCurso = document.getElementById("filtroCurso")?.value || "";
+        const busqueda = document.getElementById("buscarAlumno")?.value.toLowerCase() || "";
+        const spanContador = document.getElementById("contadorAlumnos");
+
+        tabla.innerHTML = "";
+        let contador = 0;
+
+        queryCollection.forEach((doc) => {
+            const alumno = doc.val();
+            const id = doc.key;
+
+            if (alumno.borrar === "Si") return;
+            if (filtroCurso && alumno.curso !== filtroCurso) return;
+            
+            const coincideNombre = alumno.nombre?.toLowerCase().includes(busqueda);
+            const coincideDNI = alumno.dni?.toString().includes(busqueda);
+            if (busqueda && !coincideNombre && !coincideDNI) return;
+
+            contador++;
+            const fila = document.createElement("tr");
+            fila.id = id;
+            fila.innerHTML = `
+                <td>${alumno.curso}</td>
+                <td>${alumno.nombre}</td>
+                <td>${alumno.dni}</td>
+                <td>${alumno.obs}</td>
+                <td>
+                    <button onclick="window.miModal('detallealumnoModal','${id}')" class="btn btn-success btn-sm"><i class="bi bi-binoculars"></i></button>
+                    <button onclick="window.miModal('editaralumnoModal','${id}')" class="btn btn-warning btn-sm"><i class="bi bi-pencil-square"></i></button>
+                    <button onclick="window.miModal('eliminaralumnoModal','${id}')" class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></button>
+                </td>`;
+            tabla.appendChild(fila);
+        });
+        if (spanContador) spanContador.textContent = contador;
+    } catch (error) { console.error("Error alumnos:", error); }
+}
+
+
+
+/**
+ * Función para mostrar alumnos que no tienen huella asignada (huellaId === -1)
+ */
+async function mostraralumnosSinHuella() {
+    try {
+        const tabla = document.querySelector("#tablaalumnosSinHuella tbody");
+        if (!tabla) return; // Si no existe el elemento, salimos sin error
+
+        const queryCollection = await getalumnosCollection();
+        tabla.innerHTML = "";
+
+        queryCollection.forEach((doc) => {
+            const alumno = doc.val();
+            const id = doc.key;
+
+            // Filtros: No borrados Y que no tengan huellaId (valor -1)
+            if (alumno.borrar === "Si") return;
+            if (alumno.huellaId !== -1 && alumno.huellaId !== "-1") return;
+
+            const fila = document.createElement("tr");
+            fila.id = id;
+            fila.innerHTML = `
+                <td>${alumno.curso}</td>
+                <td>${alumno.nombre}</td>
+                <td>${alumno.dni}</td>
+                <td>${alumno.obs}</td>
+                <td>
+                    <button onclick="window.miModal('detallealumnoModal','${id}')" class="btn btn-success btn-sm">
+                        <i class="bi bi-binoculars"></i>
+                    </button>
+                    <button onclick="window.miModal('editaralumnoModal','${id}')" class="btn btn-warning btn-sm">
+                        <i class="bi bi-pencil-square"></i>
+                    </button>
+                    <button onclick="window.miModal('eliminaralumnoModal','${id}')" class="btn btn-danger btn-sm">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>`;
+            tabla.appendChild(fila);
+        });
+    } catch (error) {
+        console.error("Error al obtener los alumnos sin huella:", error);
     }
 }
 
-window.miModal = async function (idModal, idalumno = "") {
+
+
+async function mostrarCursosEnHTML() {
     try {
-        // 1. Limpieza de seguridad
+        const tabla = document.querySelector("#tablaCursos tbody");
+        if (!tabla) return;
+
+        const snapshot = await getCursosCollection();
+        tabla.innerHTML = "";
+
+        if (snapshot.exists()) {
+            snapshot.forEach((child) => {
+                const id = child.key;
+                const curso = child.val();
+                const fila = document.createElement("tr");
+                fila.id = id;
+                fila.innerHTML = `
+                    <td>${curso.curso || "N/A"}</td>
+                    <td>${curso.ubicacion || "N/A"}</td>
+                    <td>${curso.capacidad || "N/A"}</td>
+                    <td>${curso.obs || "N/A"}</td>
+                    <td>
+                        <button onclick="window.miModal('detalleCursoModal','${id}')" class="btn btn-success btn-sm"><i class="bi bi-binoculars"></i></button>
+                        <button onclick="window.miModal('editarCursoModal','${id}')" class="btn btn-warning btn-sm"><i class="bi bi-pencil-square"></i></button>
+                        <button onclick="window.miModal('eliminarCursoModal','${id}')" class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></button>
+                    </td>`;
+                tabla.appendChild(fila);
+            });
+        }
+    } catch (error) { console.error("Error cursos:", error); }
+}
+
+/**
+ * 2. GESTIÓN DE MODALES UNIFICADA
+ */
+
+window.miModal = async function (idModal, idRef = "") {
+    try {
+        // Limpieza previa
         const existing = document.getElementById(idModal);
         if (existing) {
             const ins = bootstrap.Modal.getInstance(existing);
-            if (ins) ins.dispose();
+            if (ins) ins.hide();
             existing.remove();
         }
         document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
 
-        // 2. Cargar el PHP
-        let url = "";
-        switch (idModal) {
-            case "agregaralumnoModal": url = "modales/modalAdd.php"; break;
-            case "detallealumnoModal": url = "modales/modalDetalles.php"; break;
-            case "editaralumnoModal": url = "modales/modalEditar.php"; break;
-            case "eliminaralumnoModal": url = "modales/modalDelete.php"; break;
-           
-            default: return;
-        }
+        // Selección de URL
+        const rutas = {
+            "agregaralumnoModal": "modales/modalAdd.php",
+            "detallealumnoModal": "modales/modalDetalles.php",
+            "editaralumnoModal": "modales/modalEditar.php",
+            "eliminaralumnoModal": "modales/modalDelete.php",
+            "agregarCursoModal": "modales/modalAddCurso.php",
+            "detalleCursoModal": "modales/modalDetallesCurso.php",
+            "editarCursoModal": "modales/modalEditarCurso.php",
+            "eliminarCursoModal": "modales/modalDeleteCurso.php"
+        };
 
-        const response = await fetch(url);
+        if (!rutas[idModal]) return;
+
+        const response = await fetch(rutas[idModal]);
         const text = await response.text();
-
-        // 3. Convertir texto a elementos y FILTRAR solo el DIV del modal
         const parser = new DOMParser();
         const htmlDoc = parser.parseFromString(text, 'text/html');
-
-        // Esto busca el div.modal real ignorando comentarios y textos
         const modalElement = htmlDoc.querySelector('.modal');
 
-        if (!modalElement) {
-            console.error("No se encontró un div con clase 'modal' en el archivo cargado.");
-            return;
-        }
-
-        // 4. Inyectar y mostrar
         document.body.appendChild(modalElement);
-
         const myModal = new bootstrap.Modal(modalElement);
         myModal.show();
 
-        // 5. Cargar datos según corresponda
-        if (idModal === "detallealumnoModal") {
-            await cargarDetallealumno(idalumno);
-        } else if (idModal === "editaralumnoModal") {
-            await getalumnoUpdateCollection(idalumno);
-        } else if (idModal === "eliminaralumnoModal") {
+        // Carga de datos específicos post-apertura
+        if (idModal === "agregaralumnoModal") await cargarCursosEnModal();
+        if (idModal === "agregarCursoModal") await cargarPreceptoresEnModal();
+        if (idModal === "detallealumnoModal") await cargarDetallealumno(idRef);
+        if (idModal === "editaralumnoModal") await getalumnoUpdateCollection(idRef);
+        if (idModal === "detalleCursoModal") await cargarDetalleCurso(idRef);
+        if (idModal === "editarCursoModal") await getCursoUpdateCollection(idRef);
+        
+        if (idModal.includes("eliminar")) {
             const btn = modalElement.querySelector("#confirmDeleteBtn");
-            if (btn) btn.onclick = async () => { 
-                await eliminaralumno(idalumno); 
-                //await solicitarBorradoHuella(idalumno); 
+            if (btn) btn.onclick = async () => {
+                idModal.includes("alumno") ? await eliminaralumno(idRef) : await eliminarCurso(idRef);
                 myModal.hide();
-             };
+            };
         }
-
-    } catch (error) {
-        console.error("Error al abrir modal:", error);
-    }
+    } catch (error) { console.error("Error Modal:", error); }
 };
 
-// async function mostraralumnosSinHuella() {
-//     try {
-//         const queryCollection = await getalumnosCollection();
-//         const tablaalumnos = document.querySelector("#tablaalumnos tbody");
-//         if (!tablaalumnos) return;
-
-//         tablaalumnos.innerHTML = "";
-
-//         queryCollection.forEach((doc) => {
-
-//             const alumno = doc.val();
-
-//             const id = doc.key;
-//              if (alumno.borrar === "Si") { return; }
-//             const fila = document.createElement("tr");
-//             fila.id = id;
-//             fila.innerHTML = `
-//                 <td>${alumno.curso}</td>
-//                 <td>${alumno.nombre}</td>
-//                 <td>${alumno.dni}</td>
-//                 <td>${alumno.obs}</td>
-//                 <td>
-//                     <a title="Ver detalles" href="#" onclick="window.miModal('detallealumnoModal','${id}')" class="btn btn-success btn-sm">
-//                         <i class="bi bi-binoculars"></i>
-//                     </a>
-//                     <a title="Editar" href="#" onclick="window.miModal('editaralumnoModal','${id}')" class="btn btn-warning btn-sm">
-//                         <i class="bi bi-pencil-square"></i>
-//                     </a>
-//                     <a title="Eliminar" href="#" onclick="window.miModal('eliminaralumnoModal','${id}')" class="btn btn-danger btn-sm">
-//                         <i class="bi bi-trash"></i>
-//                     </a> 
-//                 </td>
-//             `;
-//             tablaalumnos.appendChild(fila);
-//         });
-//     } catch (error) {
-//         console.error("Error al obtener los alumnos:", error);
-//     }
-// }
-
 /**
- * Función para mostrar alertas (Usando iziToast)
- * Movida arriba para que esté disponible cuando se necesite.
+ * 3. FUNCIONES DE APOYO (SELECTS Y DETALLES)
  */
-window.mostrarAlerta = function ({ tipoToast, mensaje }) {
-    if (typeof iziToast === 'undefined') {
-        console.warn("iziToast no está cargado, usando alert normal:", mensaje);
-        alert(mensaje);
-        return;
-    }
 
-    if (tipoToast === "success") {
-        iziToast.success({
-            timeout: 5000,
-            icon: "bi bi-check-circle-fill",
-            title: "¡Éxito!",
-            message: mensaje,
-            position: "topRight"
-        });
-    } else if (tipoToast === "error" || tipoToast === "warning") {
-        iziToast.error({
-            timeout: 5000,
-            icon: "bi bi-x-circle-fill",
-            title: "¡Error!",
-            message: mensaje,
-            position: "topRight"
+async function cargarCursosEnModal() {
+    const select = document.getElementById("selectCursoModal");
+    if (!select) return;
+    const cursosSnap = await getCursosCollection();
+    select.innerHTML = '<option selected value="">Seleccione</option>';
+    cursosSnap.forEach(doc => {
+        const data = doc.val();
+        select.innerHTML += `<option value="${data.curso}">${data.curso}</option>`;
+    });
+}
+
+async function cargarPreceptoresEnModal() {
+    const select = document.getElementById("selectPreceptorModal");
+    if (!select) return;
+    const snap = await getPreceptoresCollection();
+    select.innerHTML = '<option selected value="">Seleccione Preceptor</option>';
+    if (snap.exists()) {
+        snap.forEach(doc => {
+            select.innerHTML += `<option value="${doc.key}">${doc.val().nombre}</option>`;
         });
     }
-};
-
-// ... resto de tus funciones (addNuevoalumno, etc.)
-
+}
 
 /**
- * CREATE: Agrega un nuevo alumno
+ * 4. EVENTOS DE CREACIÓN Y ACTUALIZACIÓN
  */
-window.addNuevoalumno = async function (event) {
+
+window.addNuevoCurso = async function (event) {
     event.preventDefault();
-    const formulario = document.querySelector("#formularioalumno");
-    const formData = new FormData(formulario);
-    const dataJSON = Object.fromEntries(formData.entries());
+    const form = document.querySelector("#formularioCursoEdit");
+    const fd = new FormData(form);
+    const preceptorID = fd.get("preceptorID");
+
+    if (!preceptorID) return alert("Seleccione un preceptor");
 
     try {
-        await addalumno(dataJSON.curso, dataJSON.nombre, dataJSON.dni, dataJSON.obs, -1); //-1 sin id de huella asigando
-        formulario.reset();
+        await addCurso(fd.get("curso"), fd.get("ubicacion"), fd.get("capacidad"), fd.get("obsCurso"), preceptorID);
+        bootstrap.Modal.getInstance(document.getElementById('agregarCursoModal')).hide();
+        await mostrarCursosEnHTML();
+        window.mostrarAlerta({ tipoToast: "success", mensaje: "¡Curso creado!" });
+    } catch (e) { console.error(e); }
+};
 
-        const modalElt = document.getElementById("agregaralumnoModal");
-        bootstrap.Modal.getInstance(modalElt).hide();
-
-        window.mostrarAlerta({ tipoToast: "success", mensaje: "¡Alumno registrado con éxito!" });
-        await refrescarTabla();
-    } catch (error) {
-        console.error("Error al añadir:", error);
-    }
+window.addNuevoalumno = async function (event) {
+    event.preventDefault();
+    const fd = new FormData(document.querySelector("#formularioalumno"));
+    try {
+        await addalumno(fd.get("curso"), fd.get("nombre"), fd.get("dni"), fd.get("obs"), -1);
+        bootstrap.Modal.getInstance(document.getElementById("agregaralumnoModal")).hide();
+        await refrescarTablas();
+        window.mostrarAlerta({ tipoToast: "success", mensaje: "¡Alumno registrado!" });
+    } catch (e) { console.error(e); }
 };
 
 /**
- * READ ONE: Detalles del alumno
+ * 5. INICIALIZACIÓN GENERAL
+ */
+
+window.addEventListener("DOMContentLoaded", async () => {
+    await refrescarTablas();
+    
+    // Filtros de búsqueda (si existen)
+    document.getElementById("buscarAlumno")?.addEventListener("input", mostraralumnosEnHTML);
+    document.getElementById("filtroCurso")?.addEventListener("change", mostraralumnosEnHTML);
+    
+    if (document.getElementById("filtroCurso")) {
+        const select = document.getElementById("filtroCurso");
+        const cursosSnap = await getCursosCollection();
+        cursosSnap.forEach(doc => {
+            const data = doc.val();
+            select.innerHTML += `<option value="${data.curso}">${data.curso}</option>`;
+        });
+    }
+});
+
+// Función de Alerta Global
+window.mostrarAlerta = function ({ tipoToast, mensaje }) {
+    if (typeof iziToast === 'undefined') return alert(mensaje);
+    iziToast[tipoToast === "error" ? "error" : "success"]({
+        title: tipoToast === "success" ? "¡Éxito!" : "¡Error!",
+        message: mensaje,
+        position: "topRight"
+    });
+};
+/**
+ * READ ONE: Carga los detalles del alumno en el modal
  */
 async function cargarDetallealumno(id) {
     try {
@@ -197,31 +300,73 @@ async function cargarDetallealumno(id) {
             `;
         }
     } catch (error) {
-        console.error("Error al cargar detalles:", error);
+        console.error("Error al cargar detalles alumno:", error);
     }
 }
 
 /**
- * UPDATE: Cargar datos en el formulario de edición
+ * READ ONE: Carga los detalles del curso en el modal
+ */
+async function cargarDetalleCurso(id) {
+    try {
+        const snapshot = await getCursoCollection(id);
+        if (snapshot.exists()) {
+            const data = snapshot.val();
+            const contenedor = document.querySelector("#detalleCursoContenido ul");
+            if (!contenedor) return;
+
+            contenedor.innerHTML = ` 
+                <li class="list-group-item"><b>Curso: </b> ${data.curso || "N/A"}</li>
+                <li class="list-group-item"><b>Ubicación:</b> ${data.ubicacion || "N/A"}</li>
+                <li class="list-group-item"><b>Capacidad:</b> ${data.capacidad || "N/A"}</li>
+                <li class="list-group-item"><b>Obs: </b> ${data.obs || "N/A"}</li>
+            `;
+        }
+    } catch (error) {
+        console.error("Error al cargar detalles curso:", error);
+    }
+}
+/**
+ * Carga los datos del ALUMNO en el formulario de edición
  */
 async function getalumnoUpdateCollection(id) {
     try {
         const alumnoDoc = await getalumnoCollection(id);
         if (alumnoDoc.exists()) {
             const data = alumnoDoc.val();
+            // Buscamos por el atributo 'name' para asegurar coincidencia con el modal
             document.querySelector('[name="idalumno"]').value = id;
-            document.querySelector('[name="curso"]').value = data.curso;
-            document.querySelector('[name="nombre"]').value = data.nombre;
-            document.querySelector('[name="dni"]').value = data.dni;
-            document.querySelector('[name="obs"]').value = data.obs;
+            document.querySelector('[name="curso"]').value = data.curso || "";
+            document.querySelector('[name="nombre"]').value = data.nombre || "";
+            document.querySelector('[name="dni"]').value = data.dni || "";
+            document.querySelector('[name="obs"]').value = data.obs || "";
         }
     } catch (error) {
-        console.error("Error al obtener datos para editar:", error);
+        console.error("Error al cargar datos de alumno para editar:", error);
     }
 }
 
 /**
- * UPDATE: Guardar cambios del alumno
+ * Carga los datos del CURSO en el formulario de edición
+ */
+async function getCursoUpdateCollection(id) {
+    try {
+        const cursoDoc = await getCursoCollection(id);
+        if (cursoDoc.exists()) {
+            const data = cursoDoc.val();
+            // Buscamos por ID o Name según lo tengas en tu modalEditarCurso.php
+            if (document.querySelector("#idCurso")) document.querySelector("#idCurso").value = id;
+            if (document.querySelector("#curso")) document.querySelector("#curso").value = data.curso || "";
+            if (document.querySelector("#ubicacion")) document.querySelector("#ubicacion").value = data.ubicacion || "";
+            if (document.querySelector("#capacidad")) document.querySelector("#capacidad").value = data.capacidad || "";
+            if (document.querySelector("#obsCurso")) document.querySelector("#obsCurso").value = data.obs || "";
+        }
+    } catch (error) {
+        console.error("Error al cargar datos de curso para editar:", error);
+    }
+}
+/**
+ * Procesa la actualización del ALUMNO
  */
 window.actualizaralumno = async function (event) {
     event.preventDefault();
@@ -231,188 +376,83 @@ window.actualizaralumno = async function (event) {
 
     try {
         await updatealumnoCollection(idalumno, datosNuevos);
-
-        const modalElt = document.getElementById("editaralumnoModal");
-        bootstrap.Modal.getInstance(modalElt).hide();
-
+        bootstrap.Modal.getInstance(document.getElementById("editaralumnoModal")).hide();
         window.mostrarAlerta({ tipoToast: "success", mensaje: "¡Alumno actualizado!" });
-        await refrescarTabla();
+        await refrescarTablas();
     } catch (error) {
-        console.error("Error al actualizar:", error);
+        console.error("Error al actualizar alumno:", error);
     }
 };
 
+/**
+ * Procesa la actualización del CURSO
+ */
+window.actualizarCurso = async function (event) {
+    event.preventDefault();
+    const formulario = document.querySelector("#formularioCursoEdit");
+    const formData = new FormData(formulario);
+    const data = Object.fromEntries(formData.entries());
+
+    try {
+        // Ajustamos los campos para que coincidan con tu estructura de Firebase
+        const camposUpdate = {
+            curso: data.curso,
+            ubicacion: data.ubicacion,
+            capacidad: data.capacidad,
+            obs: data.obsCurso // En tu DB es 'obs' pero el input suele ser 'obsCurso'
+        };
+        await updateCursoCollection(data.idCurso, camposUpdate);
+        bootstrap.Modal.getInstance(document.getElementById("editarCursoModal")).hide();
+        window.mostrarAlerta({ tipoToast: "success", mensaje: "¡Curso actualizado!" });
+        await refrescarTablas();
+    } catch (error) {
+        console.error("Error al actualizar curso:", error);
+    }
+};
 
 /**
- * DELETE: Lógica principal de borrado
+ * Lógica de borrado de ALUMNO (Físico o Lógico según huella)
  */
-
-
 async function eliminaralumno(id) {
     try {
-        const snapshot = await getalumnosCollection(); // O la función que uses para traer el alumno
-        // Nota: Si puedes, usa getalumnoById(id) para ser más eficiente
-        
-        // Buscamos los datos del alumno específico en el snapshot o volvemos a consultar
         const alumnoSnapshot = await getalumnoCollection(id); 
         if (!alumnoSnapshot.exists()) return;
+        
         const alumno = alumnoSnapshot.val();
 
+        // Si no tiene huella asignada (-1), borrado físico directo
         if (alumno.huellaId === "-1" || alumno.huellaId === -1) {
-            // CASO A: Sin huella -> Borrado físico directo
             await deletealumnoCollection(id);
             window.mostrarAlerta({ tipoToast: "success", mensaje: "Alumno eliminado correctamente" });
         } else {
-            // CASO B: Con huella -> Usamos tu función UPDATE de firebase.js
-            // Pasamos el ID y el objeto con el campo que queremos cambiar
+            // Si tiene huella, borrado lógico para que el ESP32 lo procese
             await updatealumnoCollection(id, { borrar: "Si" });
-            
             window.mostrarAlerta({ 
                 tipoToast: "success", 
                 mensaje: "Enviando orden de borrado al sensor ESP" 
             });
         }
-
-        await refrescarTabla();
+        await refrescarTablas();
     } catch (error) {
         console.error("Error en eliminaralumno:", error);
-        window.mostrarAlerta({ tipoToast: "error", mensaje: "Error al procesar la solicitud" });
+        window.mostrarAlerta({ tipoToast: "error", mensaje: "Error al eliminar" });
     }
 }
 
-// Inicialización
-window.addEventListener("DOMContentLoaded", mostraralumnosEnHTML);
-
-async function cargarCursosEnSelect() {
-    const select = document.getElementById("filtroCurso");
-    const cursosSnap = await getCursosCollection(); 
-    
-    cursosSnap.forEach(doc => {
-        const cursoData = doc.val();
-        const option = document.createElement("option");
-        option.value = cursoData.Curso; // El campo de tu DB
-        option.textContent = cursoData.Curso;
-        select.appendChild(option);
-    });
-}
-
-async function mostraralumnosEnHTML() {
+/**
+ * Lógica de borrado de CURSO
+ */
+async function eliminarCurso(id) {
     try {
-        const queryCollection = await getalumnosCollection();
-        const tablaalumnos = document.querySelector("#tablaalumnos tbody");
-        const filtroCurso = document.getElementById("filtroCurso").value;
-        const busqueda = document.getElementById("buscarAlumno").value.toLowerCase();
-        const spanContador = document.getElementById("contadorAlumnos"); // El nuevo span
-
-        if (!tablaalumnos) return;
-        tablaalumnos.innerHTML = "";
+        await deleteCursoCollection(id);
+        // Eliminación visual inmediata de la fila
+        const fila = document.getElementById(id);
+        if (fila) fila.remove();
         
-        let contador = 0; // Inicializamos el contador
-
-        queryCollection.forEach((doc) => {
-            const alumno = doc.val();
-            const id = doc.key;
-
-            // 1. Filtro de borrado lógico
-            if (alumno.borrar === "Si") return;
-
-            // 2. Filtro por Curso
-            if (filtroCurso && alumno.curso !== filtroCurso) return;
-
-            // 3. Filtro por Apellido o DNI
-            const coincideNombre = alumno.nombre.toLowerCase().includes(busqueda);
-            const coincideDNI = alumno.dni.toString().includes(busqueda);
-            if (busqueda && !coincideNombre && !coincideDNI) return;
-
-            // Si llegó aquí, el alumno pasó los filtros
-            contador++; 
-
-            // Construcción de la fila
-            const fila = document.createElement("tr");
-            fila.id = id;
-            fila.innerHTML = `
-                <td>${alumno.curso}</td>
-                <td>${alumno.nombre}</td>
-                <td>${alumno.dni}</td>
-                <td>${alumno.obs}</td>
-                <td>
-                    <a onclick="window.miModal('detallealumnoModal','${id}')" class="btn btn-success btn-sm"><i class="bi bi-binoculars"></i></a>
-                    <a onclick="window.miModal('editaralumnoModal','${id}')" class="btn btn-warning btn-sm"><i class="bi bi-pencil-square"></i></a>
-                    <a onclick="window.miModal('eliminaralumnoModal','${id}')" class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></a>
-                </td>`;
-            tablaalumnos.appendChild(fila);
-        });
-
-        // Actualizamos el número en el HTML al terminar el bucle
-        if (spanContador) {
-            spanContador.textContent = contador;
-        }
-
+        window.mostrarAlerta({ tipoToast: "success", mensaje: "Curso eliminado correctamente" });
+        await refrescarTablas();
     } catch (error) {
-        console.error("Error al obtener alumnos:", error);
-    }
-}
-
-
-window.addEventListener("DOMContentLoaded", async () => {
-    // Si existe la tabla de "Sin Huella", cargamos esa función
-    if (document.getElementById("tablaalumnosSinHuella")) {
-        await mostraralumnosSinHuella();
-    }
-    
-    // Si existe la tabla normal (listado.html), cargamos los filtros normales
-    if (document.getElementById("tablaalumnos")) {
-        await cargarCursosEnSelect(); 
-        await mostraralumnosEnHTML();
-        
-        document.getElementById("buscarAlumno").addEventListener("input", mostraralumnosEnHTML);
-        document.getElementById("filtroCurso").addEventListener("change", mostraralumnosEnHTML);
-    }
-});
-
-
-
-
-
-async function mostraralumnosSinHuella() {
-    try {
-        const queryCollection = await getalumnosCollection();
-        // Usamos el ID exacto que está en tu HTML de registrar.html
-        const tablaalumnos = document.querySelector("#tablaalumnosSinHuella tbody");
-        
-        if (!tablaalumnos) return;
-        tablaalumnos.innerHTML = "";
-
-        queryCollection.forEach((doc) => {
-            const alumno = doc.val();
-            const id = doc.key;
-
-            // Filtros: No borrados Y que tengan huellaId === -1
-            if (alumno.borrar === "Si") return;
-            if (alumno.huellaId !== -1 && alumno.huellaId !== "-1") return;
-
-            const fila = document.createElement("tr");
-            fila.id = id;
-            fila.innerHTML = `
-                <td>${alumno.curso}</td>
-                <td>${alumno.nombre}</td>
-                <td>${alumno.dni}</td>
-                <td>${alumno.obs}</td>
-                <td>
-                    <a title="Ver detalles" onclick="window.miModal('detallealumnoModal','${id}')" class="btn btn-success btn-sm">
-                        <i class="bi bi-binoculars"></i>
-                    </a>
-                    <a title="Editar" onclick="window.miModal('editaralumnoModal','${id}')" class="btn btn-warning btn-sm">
-                        <i class="bi bi-pencil-square"></i>
-                    </a>
-                    <a title="Eliminar" onclick="window.miModal('eliminaralumnoModal','${id}')" class="btn btn-danger btn-sm">
-                        <i class="bi bi-trash"></i>
-                    </a> 
-                </td>
-            `;
-            tablaalumnos.appendChild(fila);
-        });
-    } catch (error) {
-        console.error("Error al obtener los alumnos sin huella:", error);
+        console.error("Error al borrar el Curso:", error);
+        window.mostrarAlerta({ tipoToast: "error", mensaje: "Error al eliminar el Curso" });
     }
 }

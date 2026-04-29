@@ -1,18 +1,16 @@
-// Use the full HTTPS URL so the browser can find the SDK
- import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-import { 
-    getDatabase, 
-    ref, 
-    push, 
-    get, 
-    remove, 
-    update, 
-    query,        
-    orderByChild //,
-    //MarcarParaBorrar  
+// firebase.js - ARCHIVO UNIFICADO
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+import {
+  getDatabase,
+  ref,
+  push,
+  get,
+  update,
+  remove,
+  query,
+  orderByChild
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-database.js";
 
-// YOUR REAL CREDENTIALS (The ones you found in the console)
 const firebaseConfig = {
     apiKey: "AIzaSyAfpEDzd8wc6t9Y3foI2HDrWVL_MIzhYnA",
     authDomain: "asistencia-93328.firebaseapp.com",
@@ -21,57 +19,62 @@ const firebaseConfig = {
     storageBucket: "asistencia-93328.firebasestorage.app",
     messagingSenderId: "692275978617",
     appId: "1:692275978617:web:5579ef6c0aeb2d58c7cfa8"
-  };
+};
 
-// Initialize
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-const nodoPrincipal = "tbl_alumnos";
+// Inicialización única
+export const app = initializeApp(firebaseConfig);
+export const db = getDatabase(app);
+
+// Nodos / Colecciones
+const coleccionCursos = "cursos";
+const coleccionPreceptores = "preceptor";
+const nodoAlumnos = "tbl_alumnos";
 
 /** 
- * ACCIONES CRUD ADAPTADAS
+ * --- SECCIÓN CURSOS ---
  */
+export const addCurso = (curso, ubicacion, capacidad, obs, preceptorID) => 
+    push(ref(db, coleccionCursos), { curso, ubicacion, capacidad, obs, preceptorID });
 
-// CREATE: Agrega un nuevo alumno. 
+export const getCursosCollection = () => get(ref(db, coleccionCursos));
+
+export const getCursoCollection = (id) => get(ref(db, `${coleccionCursos}/${id}`));
+
+export const updateCursoCollection = (id, newFields) => 
+    update(ref(db, `${coleccionCursos}/${id}`), newFields);
+
+export const deleteCursoCollection = (id) => 
+    remove(ref(db, `${coleccionCursos}/${id}`));
+
+/** 
+ * --- SECCIÓN PRECEPTORES ---
+ */
+export const getPreceptoresCollection = () => get(ref(db, coleccionPreceptores));
+
+/** 
+ * --- SECCIÓN ALUMNOS ---
+ */
 export const addalumno = (curso, nombre, dni, obs, huellaId) => {
-    return push(ref(db, nodoPrincipal), { curso, nombre, dni, obs, huellaId: huellaId, borrar:"No" });
-};
-
-
-export const getalumnoCollection = (id) => {
-    return get(ref(db, `${nodoPrincipal}/${id}`));
-};
-
-// UPDATE: Actualiza campos específicos usando el ID.
-export const updatealumnoCollection = (id, newFields) => {
-    return update(ref(db, `${nodoPrincipal}/${id}`), newFields);
-};
-
-// DELETE: Elimina el registro por ID.
-export const deletealumnoCollection = (id) => {
-   return remove(ref(db, `${nodoPrincipal}/${id}`));
-};
-
-// Cambia el estado a "Borrar" para que el ESP32 lo procese
-export const marcarParaBorrar = (id) => {
-  return update(ref(db, `${nodoPrincipal}/${id}`), {
-    obs: "Borrar"
-  });
-};
-
-export const getAsistenciasHoy = () => {
-    const dbRef = ref(db, "asistencia"); // Nombre exacto de tu tabla
-    return get(dbRef);
+    return push(ref(db, nodoAlumnos), { curso, nombre, dni, obs, huellaId, borrar: "No" });
 };
 
 export const getalumnosCollection = () => {
-    const alumnosRef = ref(db, 'tbl_alumnos'); // O usa la variable 'nodoPrincipal' si la tienes definida
-    const consultaOrdenada = query(alumnosRef, orderByChild('dni'));
+    const consultaOrdenada = query(ref(db, nodoAlumnos), orderByChild('dni'));
     return get(consultaOrdenada);
 };
 
-export const getCursosCollection = () => {
-    const db = getDatabase();
-    const cursosRef = ref(db, 'cursos'); // Asegúrate que 'cursos' sea el nombre de tu nodo en Realtime Database
-    return get(cursosRef);
-};
+export const getalumnoCollection = (id) => get(ref(db, `${nodoAlumnos}/${id}`));
+
+export const updatealumnoCollection = (id, newFields) => 
+    update(ref(db, `${nodoAlumnos}/${id}`), newFields);
+
+export const deletealumnoCollection = (id) => 
+    remove(ref(db, `${nodoAlumnos}/${id}`));
+
+export const marcarParaBorrar = (id) => 
+    update(ref(db, `${nodoAlumnos}/${id}`), { obs: "Borrar" });
+
+/** 
+ * --- SECCIÓN ASISTENCIAS ---
+ */
+export const getAsistenciasHoy = () => get(ref(db, "asistencia"));

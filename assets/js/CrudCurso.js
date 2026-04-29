@@ -4,7 +4,8 @@ import {
   deleteCursoCollection,
   getCursoCollection,
   updateCursoCollection,
-} from "./firebase.js";
+  getPreceptoresCollection,
+} from "../../assets/js/firebase.js";
 
 /**
  * Función para levantar Venta Modal
@@ -51,7 +52,11 @@ window.miModal = async function (idModal, idCurso = "") {
     const modalElement = modalContainer.querySelector(`#${idModal}`);
     const myModal = new bootstrap.Modal(modalElement);
     myModal.show();
-
+if (idModal === "agregarCursoModal") { // Ajusta al ID real de tu modal de curso
+    await cargarPreceptoresEnModal();
+} else if (idModal === "agregaralumnoModal") {
+    await cargarCursosEnModal();
+}
     if (idModal === "detalleCursoModal") {
       await cargarDetalleCurso(idCurso);
     } else if (idModal === "editarCursoModal") {
@@ -122,46 +127,44 @@ window.addEventListener("DOMContentLoaded", mostrarCursosEnHTML);
  */
 
 window.addNuevoCurso = async function (event) {
-  event.preventDefault();
-  
-  // 1. Usamos el ID exacto de tu HTML: "formularioCursoEdit"
-  const formulario = document.querySelector("#formularioCursoEdit");
-  
-  if (!formulario) {
-    console.error("No se encontró el formulario #formularioCursoEdit");
-    return;
-  }
+    event.preventDefault();
+    
+    const formulario = document.querySelector("#formularioCursoEdit");
+    if (!formulario) return;
 
-  const formData = new FormData(formulario);
-  const formDataJSON = {};
-  formData.forEach((value, key) => {
-    formDataJSON[key] = value;
-  });
+    const formData = new FormData(formulario);
+    
+    // Obtenemos los valores usando el atributo 'name' del HTML
+    const curso = formData.get("curso");
+    const ubicacion = formData.get("ubicacion");
+    const capacidad = formData.get("capacidad");
+    const obsCurso = formData.get("obsCurso");
+    const preceptorID = formData.get("preceptorID"); // Coincide con el name del select
 
-  // 2. Extraemos los valores según los "name" de tus inputs
-  const { curso, ubicacion, capacidad, obsCurso } = formDataJSON;
+    console.log("Datos capturados:", { curso, preceptorID });
 
-  try {
-    // 3. Llamamos a addCurso (la función de tu firebase.js)
-    // Pasamos obsCurso al parámetro de observaciones
-    await addCurso(curso, ubicacion, capacidad, obsCurso);
-
-    // 4. Limpiar formulario y cerrar modal
-    formulario.reset();
-    $("#agregarCursoModal").modal("hide");
-
-    // 5. Actualizar la tabla automáticamente
-    if (typeof mostrarCursosEnHTML === "function") {
-      await mostrarCursosEnHTML();
+    if (!preceptorID || preceptorID === "") {
+        alert("Por favor, seleccione un preceptor");
+        return;
     }
 
-    window.mostrarAlerta({ tipoToast: "success", mensaje: "¡Curso creado con éxito!" });
-  } catch (error) {
-    console.error("Error al crear el curso:", error);
-    window.mostrarAlerta({ tipoToast: "error", mensaje: "Error al crear el curso" });
-  }
-};
+    try {
+        // Usamos preceptorID (con D mayúscula como en tu firebase.js)
+        await addCurso(curso, ubicacion, capacidad, obsCurso, preceptorID);
+        
+        formulario.reset();
+        
+        // Cerrar modal correctamente
+        const modalElt = document.getElementById('agregarCursoModal');
+        const modal = bootstrap.Modal.getInstance(modalElt);
+        if (modal) modal.hide();
 
+        await mostrarCursosEnHTML();
+        window.mostrarAlerta({ tipoToast: "success", mensaje: "¡Curso creado con éxito!" });
+    } catch (error) {
+        console.error("Error al crear el curso:", error);
+    }
+};
 
 
 
@@ -302,3 +305,29 @@ window.mostrarAlerta = function ({ tipoToast, mensaje }) {
     });
   }
 };
+
+async function cargarPreceptoresEnModal() {
+    const select = document.getElementById("selectPreceptorModal");
+    if (!select) return;
+
+    try {
+        const preceptorSnap = await getPreceptoresCollection(); 
+        select.innerHTML = '<option selected value="">Seleccione Preceptor</option>';
+        
+        if (preceptorSnap.exists()) {
+            preceptorSnap.forEach(doc => {
+                const data = doc.val();
+                const option = document.createElement("option");
+                
+                // IMPORTANTE: El value ahora es el ID (la clave de Firebase)
+                option.value = doc.key; 
+                // Lo que ve el usuario sigue siendo el nombre
+                option.textContent = data.nombre; 
+                
+                select.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error("Error:", error);
+    }
+}

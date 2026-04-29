@@ -9,15 +9,14 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-const asistenciaRef = ref(db, 'cursos');
+const asistenciaRef = ref(db, 'preceptor');
 
 
 async function subirDatos() {
     // Definimos el objeto con los datos del curso
     const dato = {
-      curso: "1ro C",
-      ubicacion: "1er piso",
-      capacidad: "20",
+      nombre:"",
+      turno: "",
       obs: "Ninguna"
     };
 
@@ -25,7 +24,7 @@ async function subirDatos() {
       // Usamos push para crear una nueva entrada con un ID único en Firebase
       await push(asistenciaRef, dato);
       console.log("¡Carga completada!");
-      console.log(`Curso guardado: ${dato.curso}`);
+      console.log(`Preceptor guardado: ${dato.preceptor}`);
     } catch (error) {
       console.error("Error al subir:", error);
     }

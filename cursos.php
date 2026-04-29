@@ -14,21 +14,54 @@
   <link rel="stylesheet" href="assets/alerts/css/iziToast.min.css" />
 </head>
 
-<body>
-<?php include 'navbar.php'; ?>
+
+  <body>
+  <?php include 'navbar.php'; ?>
 
   <h1 class="text-center mt-5 mb-5 fw-bold">
-    Preceptores y Cursos del Establecimiento
-    <img src="assets/imgs/Preceptor.png" alt="Preceptores" style="width: 50px" />
+   Agregar Cursos
+    <img src="assets/imgs/Cursos.png" alt="Cursos" style="width: 50px" />
     <hr />
   </h1>
 
+    <div class="container mb-5">
+      <div class="row justify-content-md-center">
+        <div class="col-md-12">
+          <h1 class="text-center">
+            <span class="float-start">
+              <a
+                href="#"
+                onclick="window.miModal('agregarCursoModal','')"
+                class="btn btn-success"
+                title="Agregar Nuevo Curso">
+                <i class="bi bi-plus-square"></i>
+              </a>
+            </span>
+            Listado de Cursos
+            <hr />
+          </h1>
 
-  <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+          <div class="table-responsive">
+            <table class="table table-hover" id="tablaCursos">
+              <thead>
+                <tr>
+                  <th>Designación del curso</th>
+                  <th>Ubicación</th>
+                  <th>Capacidad</th>
+                  <th>Obs</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
 
-  <script type="module" src="assets/js/todoCrud.js"></script>
-  <script src="assets/alerts/js/iziToast.min.js"></script>
-</body>
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
+    <script type="module" src="assets/js/CrudCurso.js"></script>
+    <script src="assets/alerts/js/iziToast.min.js"></script>
+  </body>
 </html>

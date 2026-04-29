@@ -15,6 +15,13 @@
                             <input type="text" name="curso" id="curso" class="form-control" required />
                         </div>
                         <div class="mb-3">
+                            <label class="form-label">Seleccione Preceptor</label>
+                            <select name="preceptorID" id="selectPreceptorModal" class="form-select" required>
+                                <option selected value="">Seleccione</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
                             <label class="form-label">Ubicación</label>
                             <input type="text" name="ubicacion" id="ubicacion" class="form-control" required />
                         </div>

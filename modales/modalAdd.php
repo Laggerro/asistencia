@@ -9,21 +9,8 @@
                     <form id="formularioalumno" action="" method="POST" autocomplete="off">
                         <div class="mb-3">
                             <label class="form-label">Seleccione el Curso</label>
-                            <select name="curso" class="form-select" required>
+                            <select name="curso" id="selectCursoModal" class="form-select" required>
                                 <option selected value="">Seleccione</option>
-                                <?php
-                                $curso = array(
-                                    "1ro A",
-                                    "1ro B",
-                                    "1ro C",
-                                    "2do A",
-                                    "2do B",
-                                    "2do C"
-                                );
-                                foreach ($curso as $curso) {
-                                    echo "<option value='$curso'>$curso</option>";
-                                }
-                                ?>
                             </select>
                         </div>
 
