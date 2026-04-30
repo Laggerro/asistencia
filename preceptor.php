@@ -19,8 +19,8 @@
   <?php include 'navbar.php'; ?>
 
   <h1 class="text-center mt-5 mb-5 fw-bold">
-   Listado de Cursos
-    <img src="assets/imgs/Cursos.png" alt="Cursos" style="width: 50px" />
+   Listado de Preceptores
+    <img src="assets/imgs/Preceptor.png" alt="Preceptores" style="width: 50px" />
     <hr />
   </h1>
 
@@ -31,23 +31,22 @@
             <span class="float-start">
               <a
                 href="#"
-                onclick="window.miModal('agregarCursoModal','')"
+                onclick="window.miModal('agregarPreceptorModal','')"
                 class="btn btn-success btn-lg"
-                title="Agregar Nuevo Curso">
+                title="Agregar Nuevo Preceptor">
                 <i class="bi bi-plus-square"></i>
               </a>
             </span>
-            Agregar nuevo Curso
+            Agregar un nuevo Preceptor
             <hr />
           </h1>
 
           <div class="table-responsive">
-            <table class="table table-hover" id="tablaCursos">
+            <table class="table table-hover" id="tablaPreceptor">
               <thead>
                 <tr>
-                  <th>Designación del curso</th>
-                  <th>Ubicación</th>
-                  <th>Capacidad</th>
+                  <th>Apellido y Nombre</th>
+                  <th>Turno</th>
                   <th>Obs</th>
                   <th>Acciones</th>
                 </tr>
@@ -62,7 +61,7 @@
     <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    <script type="module" src="assets/js/todoCrud.js"></script>
+    <script type="module" src="assets/js/PreceptorCrud.js"></script>
     <script src="assets/alerts/js/iziToast.min.js"></script>
   </body>
 </html>

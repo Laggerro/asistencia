@@ -53,6 +53,7 @@
                   <th>Apellido y Nombre</th>
                   <th>DNI</th>
                   <th>Obs</th>
+                  <th>Acciones</th>
                 </tr>
               </thead>
               <tbody></tbody>

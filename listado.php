@@ -63,7 +63,7 @@
                     <th>Apellido y Nombre</th>
                     <th>DNI</th>
                     <th>Obs</th>
-                    <th>Acciones</th> <!-- Agregué esta cabecera para tus botones -->
+                    <th>Acciones</th>
                 </tr>
             </thead>
             <tbody></tbody>
