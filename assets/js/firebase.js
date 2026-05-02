@@ -27,8 +27,9 @@ export const db = getDatabase(app);
 
 // Nodos / Colecciones
 const coleccionCursos = "cursos";
-const coleccionPreceptores = "preceptor";
+const coleccionPreceptores = "tbl_preceptor"; //para llenar el modal de cursos con los preceptores existentes
 const nodoAlumnos = "tbl_alumnos";
+
 
 /** 
  * --- SECCIÓN CURSOS ---
@@ -46,21 +47,7 @@ export const updateCursoCollection = (id, newFields) =>
 export const deleteCursoCollection = (id) => 
     remove(ref(db, `${coleccionCursos}/${id}`));
 
-/** 
- * --- SECCIÓN PRECEPTORES ---
- */
-export const getPreceptoresCollection = () => get(ref(db, coleccionPreceptores));
-
-export const addNuevopreceptor = (nombre, turno, obs) => 
-    push(ref(db, coleccionPreceptores), { nombre, turno, obs });
-
-export const getPreceptorCollection = (id) => get(ref(db, `${coleccionPreceptores}/${id}`));
-
-export const updatePreceptorCollection = (id, newFields) => 
-    update(ref(db, `${coleccionPreceptores}/${id}`), newFields);
-
-export const deletePreceptorCollection = (id) => 
-    remove(ref(db, `${coleccionPreceptores}/${id}`));
+export const getPreceptoresCollection = () => get(ref(db, coleccionPreceptores)); //Es la función que trae la lista para el option del modal de Cursos).
 
 /** 
  * --- SECCIÓN ALUMNOS ---
@@ -89,3 +76,22 @@ export const marcarParaBorrar = (id) =>
  * --- SECCIÓN ASISTENCIAS ---
  */
 export const getAsistenciasHoy = () => get(ref(db, "asistencia"));
+
+
+/** 
+ * --- SECCIÓN PRECEPTORES ---
+ */
+// Función para guardar (Aseguramos que reciba strings)
+export const addPreceptor = (nombre, turno, obs) => 
+  push(ref(db, coleccionPreceptores), { nombre, turno, obs });
+
+// Función para listar
+export const getOtrosPreceptoresCollection = () => get(ref(db, coleccionPreceptores));
+
+// Función para eliminar
+export const deletePreceptorCollection = (id) => remove(ref(db, `${coleccionPreceptores}/${id}`));
+
+export const updatePreceptorCollection = (id, newFields) => 
+    update(ref(db, `${coleccionPreceptores}/${id}`), newFields);
+
+export const getPreceptorCollection = (id) => get(ref(db, `${coleccionPreceptores}/${id}`));

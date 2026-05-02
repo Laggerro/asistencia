@@ -2,7 +2,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h1 class="modal-title fs-5 titulo_modal">Editar datos del Curso</h1>
+                    <h1 class="modal-title fs-5 titulo_modal">Editar datos del Preceptor</h1>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -10,7 +10,7 @@
                         <input type="hidden" name="idPreceptor" id="idPreceptor" />
                           <div class="mb-3">
                             <label class="form-label">Apellido y Nombre</label>
-                            <input type="text" name="preceptor" id="preceptor" class="form-control" required />
+                            <input type="text" name="nombre" id="nombre" class="form-control" required />
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Turno</label>
@@ -20,7 +20,7 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Obs</label>
-                            <input type="text" name="obsPreceptor" id="obsPreceptor" class="form-control" required />
+                            <input type="text" name="obs" id="obs" class="form-control" required />
                         </div>                       
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-primary btn_add" onclick="window.actualizarPreceptor(event)">
