@@ -15,7 +15,7 @@ const asistenciaRef = ref(db, 'tbl_usuarios');
 async function subirDatos() {
   // Definimos el objeto con los datos del curso
   const dato = {
-    usuario: "vivi",
+    usuario: "viviadfdefdfdfddfdfdna",
     Password: "12345678",
     rol: "Preceptor",
     curso: "3ro B,1ro A,5to C",
@@ -25,8 +25,8 @@ async function subirDatos() {
   try {
     // Usamos push para crear una nueva entrada con un ID único en Firebase
     await push(asistenciaRef, dato);
-    console.log("¡Carga completada!");
-    console.log(`Preceptor guardado: ${dato.preceptor}`);
+    console.log("¡Carga completadaaaaaaaaaaaaaaaaaaaaaaaaaaaa!");
+    console.log(`Preceptor guardtghthgthgtghado: ${dato.preceptor}`);
   } catch (error) {
     console.error("Error al subir:", error);
   }

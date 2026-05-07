@@ -21,8 +21,19 @@
                             <option selected value="">Seleccione</option>
                             <option value="Mañana">Mañana</option>
                             <option value="Tarde">Tarde</option>
+                            <option value="Ambos">Mañana y Tarde</option>
                         </select>
                     </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Usuario</label>
+                        <input type="text" name="usuarioApp" id="usuarioApp" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Contraseña</label>
+                        <input type="text" name="passApp" id="passApp" class="form-control" required />
+                    </div>
+
                     <div class="mb-3">
                         <label class="form-label">Obs</label>
                         <input type="text" name="obs" id="obs" class="form-control" required />

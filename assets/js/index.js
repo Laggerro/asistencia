@@ -87,8 +87,8 @@ function actualizarTotalesUI(p, a, s) {
         <div class="text-center mb-2"><strong>Total Alumnos: ${p + a + s}</strong></div>
         <div class="d-flex justify-content-between text-success"><span>Presentes:</span> <span>${p}</span></div>
         <div class="d-flex justify-content-between text-danger"><span>Ausentes:</span> <span>${a}</span></div>
-        <div class="d-flex justify-content-between text-muted border-top mt-2 pt-1">
-            <small>Sin Huella (-1):</small> <small>${s}</small>
+        <div class="d-flex justify-content-between text-normal border-top mt-2 pt-1">
+            <small>Sin registro de Huella :</small> <small>${s}</small>
         </div>`;
 }
 

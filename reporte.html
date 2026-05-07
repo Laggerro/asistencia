@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte de Asistencias</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <!-- Librería para generar PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.12.1/html2pdf.bundle.min.js"
+        integrity="sha512-D25Z8/1q2z65ZpJ3NzY6XiPZfwjhbv34OTQHDIZd+KPK+uWCovGt+fMkSzW8ArzCMFUgZt6Cdu7qoXNuy6a2GA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+
+<body>
+
+    <div class="controles no-print">
+        <label>Seleccionar Día: </label>
+        <input type="date" id="fechaFiltro">
+        <button id="btnGenerar">Generar Listado</button>
+        <button id="btnPdf" style="display:none;">Descargar PDF</button>
+        <input type="file" id="csvFile" accept=".csv">
+        <button id="btnCargarCsv">Subir Alumnos CSV</button>
+    </div>
+
+    <!-- Área del Reporte -->
+    <div id="reporteContenedor">
+        <div id="hoja">
+            <h1 id="tituloReporte">Reporte de Asistencia</h1>
+            <div id="resultado">
+                <p>Seleccione una fecha y presione "Generar Listado"</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="assets/js/reporte.js"></script>
+</body>
+
+</html>

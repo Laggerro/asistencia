@@ -1,14 +1,14 @@
 // firebase.js - ARCHIVO UNIFICADO
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
 import {
-  getDatabase,
-  ref,
-  push,
-  get,
-  update,
-  remove,
-  query,
-  orderByChild
+    getDatabase,
+    ref,
+    push,
+    get,
+    update,
+    remove,
+    query,
+    orderByChild
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-database.js";
 
 const firebaseConfig = {
@@ -34,17 +34,17 @@ const nodoAlumnos = "tbl_alumnos";
 /** 
  * --- SECCIÓN CURSOS ---
  */
-export const addCurso = (curso, ubicacion, capacidad, obs, preceptorID) => 
+export const addCurso = (curso, ubicacion, capacidad, obs, preceptorID) =>
     push(ref(db, coleccionCursos), { curso, ubicacion, capacidad, obs, preceptorID });
 
 export const getCursosCollection = () => get(ref(db, coleccionCursos));
 
 export const getCursoCollection = (id) => get(ref(db, `${coleccionCursos}/${id}`));
 
-export const updateCursoCollection = (id, newFields) => 
+export const updateCursoCollection = (id, newFields) =>
     update(ref(db, `${coleccionCursos}/${id}`), newFields);
 
-export const deleteCursoCollection = (id) => 
+export const deleteCursoCollection = (id) =>
     remove(ref(db, `${coleccionCursos}/${id}`));
 
 export const getPreceptoresCollection = () => get(ref(db, coleccionPreceptores)); //Es la función que trae la lista para el option del modal de Cursos).
@@ -63,13 +63,13 @@ export const getalumnosCollection = () => {
 
 export const getalumnoCollection = (id) => get(ref(db, `${nodoAlumnos}/${id}`));
 
-export const updatealumnoCollection = (id, newFields) => 
+export const updatealumnoCollection = (id, newFields) =>
     update(ref(db, `${nodoAlumnos}/${id}`), newFields);
 
-export const deletealumnoCollection = (id) => 
+export const deletealumnoCollection = (id) =>
     remove(ref(db, `${nodoAlumnos}/${id}`));
 
-export const marcarParaBorrar = (id) => 
+export const marcarParaBorrar = (id) =>
     update(ref(db, `${nodoAlumnos}/${id}`), { obs: "Borrar" });
 
 /** 
@@ -82,8 +82,8 @@ export const getAsistenciasHoy = () => get(ref(db, "asistencia"));
  * --- SECCIÓN PRECEPTORES ---
  */
 // Función para guardar (Aseguramos que reciba strings)
-export const addPreceptor = (nombre, turno, obs) => 
-  push(ref(db, coleccionPreceptores), { nombre, turno, obs });
+export const addPreceptor = (nombre, turno, usuarioApp, passApp, obs) =>
+    push(ref(db, coleccionPreceptores), { nombre, turno, usuarioApp, passApp, obs });
 
 // Función para listar
 export const getOtrosPreceptoresCollection = () => get(ref(db, coleccionPreceptores));
@@ -91,7 +91,7 @@ export const getOtrosPreceptoresCollection = () => get(ref(db, coleccionPrecepto
 // Función para eliminar
 export const deletePreceptorCollection = (id) => remove(ref(db, `${coleccionPreceptores}/${id}`));
 
-export const updatePreceptorCollection = (id, newFields) => 
+export const updatePreceptorCollection = (id, newFields) =>
     update(ref(db, `${coleccionPreceptores}/${id}`), newFields);
 
 export const getPreceptorCollection = (id) => get(ref(db, `${coleccionPreceptores}/${id}`));

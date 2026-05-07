@@ -1,5 +1,5 @@
 // PreceptorCrud.js
-import { 
+import {
     addPreceptor, getOtrosPreceptoresCollection, deletePreceptorCollection, updatePreceptorCollection, getPreceptorCollection
 } from "./firebase.js";
 
@@ -30,14 +30,14 @@ async function mostrarPreceptorsEnHTML() {
                     <td>${preceptor.obs || "N/A"}</td>
                     <td>
                         <button onclick="window.miModal('detallePreceptorModal','${id}')" class="btn btn-success btn-sm"><i class="bi bi-binoculars"></i></button>
-                     
+                        <button onclick="window.miModal('editarPreceptorModal','${id}')" class="btn btn-warning btn-sm"><i class="bi bi-pencil-square"></i></button>
                         <button onclick="window.miModal('eliminarPreceptorModal','${id}')" class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></button>
                     </td>`;
                 tabla.appendChild(fila);
             });
         }
-    } catch (error) { 
-        console.error("Error al cargar preceptor:", error); 
+    } catch (error) {
+        console.error("Error al cargar preceptor:", error);
     }
 }
 
@@ -54,6 +54,7 @@ window.miModal = async function (idModal, idRef = "") {
             existing.remove();
         }
         document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+
 
         const rutas = {
             "agregarPreceptorModal": "modales/modalAddPreceptor.php",
@@ -78,7 +79,7 @@ window.miModal = async function (idModal, idRef = "") {
         if (idModal === "agregarPreceptorModal") await cargarPreceptoresEnModal();
         if (idModal === "detallePreceptorModal") await cargarDetallePreceptor(idRef);
         if (idModal === "editarPreceptorModal") await getPreceptorUpdateCollection(idRef);
-        
+
         if (idModal === "eliminarPreceptorModal") {
             const btn = modalElement.querySelector("#confirmDeleteBtn");
             if (btn) btn.onclick = async () => {
@@ -114,33 +115,55 @@ async function cargarDetallePreceptor(id) {
             contenedor.innerHTML = ` 
                 <li class="list-group-item"><b>Apellido y Nombre: </b> ${data.nombre || "N/A"}</li>
                 <li class="list-group-item"><b>Turno:</b> ${data.turno || "N/A"}</li>
+                <li class="list-group-item"><b>Usuario:</b> ${data.usuarioApp || "N/A"}</li>
+                <li class="list-group-item"><b>Contraseña:</b> ${data.passApp || "12345678"}</li>
                 <li class="list-group-item"><b>Obs: </b> ${data.obs || "N/A"}</li>`;
         }
     } catch (error) { console.error("Error detalles preceptor:", error); }
 }
+
 
 async function getPreceptorUpdateCollection(id) {
     try {
         const preceptorDoc = await getPreceptorCollection(id);
         if (preceptorDoc.exists()) {
             const data = preceptorDoc.val();
-            if (document.querySelector("#nombre")) document.querySelector("#nombre").value = data.nombre || "";
-            if (document.querySelector("#turno")) document.querySelector("#turno").value = data.turno || "";
-            if (document.querySelector("#obs")) document.querySelector("#obs").value = data.obs || "";
+
+            // Buscamos específicamente el formulario de edición
+            const formEdit = document.getElementById("formularioPreceptorEdit");
+
+            if (formEdit) {
+                // Buscamos los inputs que están ADENTRO de ese formulario
+                formEdit.querySelector("#idPreceptor").value = id;
+                formEdit.querySelector("#nombre").value = data.nombre || "";
+                formEdit.querySelector("#usuarioApp").value = data.usuarioApp || "";
+                formEdit.querySelector("#passApp").value = data.passApp || "";
+                formEdit.querySelector("#obs").value = data.obs || "";
+
+                // Para el select, forzamos el valor
+                const selectTurno = formEdit.querySelector("#turno");
+                if (selectTurno) {
+                    selectTurno.value = data.turno;
+                }
+            }
         }
-    } catch (error) { console.error("Error precarga edición:", error); }
+    } catch (error) {
+        console.error("Error al cargar datos:", error);
+    }
 }
+
+
 
 /**
  * 4. ACCIONES (CREAR, ACTUALIZAR, ELIMINAR)
  */
 window.addPreceptor = async function (event) {
     event.preventDefault();
-  const form = document.querySelector("#formularioPreceptor"); 
+    const form = document.querySelector("#formularioPreceptor");
     const fd = new FormData(form);
- 
+
     try {
-        await addPreceptor(fd.get("nombre"), fd.get("turno"), fd.get("obs"));
+        await addPreceptor(fd.get("nombre"), fd.get("turno"), fd.get("usuarioApp"), fd.get("passApp"), fd.get("obs"));
         bootstrap.Modal.getInstance(form.closest('.modal')).hide();
         await mostrarPreceptorsEnHTML();
         window.mostrarAlerta({ tipoToast: "success", mensaje: "¡Preceptor creado!" });
@@ -148,22 +171,37 @@ window.addPreceptor = async function (event) {
 };
 
 window.actualizarPreceptor = async function (event) {
-    event.preventDefault();
+    event.preventDefault(); // Detiene la recarga de la página
+
     const formulario = document.querySelector("#formularioPreceptorEdit");
     const formData = new FormData(formulario);
     const data = Object.fromEntries(formData.entries());
+
     try {
         const camposUpdate = {
-            preceptor: data.nombre,
+            nombre: data.nombre,
             turno: data.turno,
-            obs: data.obs 
+            usuarioApp: data.usuarioApp,
+            passApp: data.passApp,
+            obs: data.obs
         };
+
         await updatePreceptorCollection(data.idPreceptor, camposUpdate);
-        bootstrap.Modal.getInstance(document.getElementById("editarPreceptorModal")).hide();
+
+        // CORRECCIÓN: Usa el ID exacto que tiene el div del modal en tu PHP
+        const modalEl = document.getElementById("editarPreceptorModal");
+        const modalInstance = bootstrap.Modal.getInstance(modalEl);
+        if (modalInstance) modalInstance.hide();
+
         window.mostrarAlerta({ tipoToast: "success", mensaje: "¡Preceptor actualizado!" });
         await mostrarPreceptorsEnHTML();
-    } catch (error) { console.error("Error al actualizar preceptor:", error); }
+    } catch (error) {
+        console.error("Error al actualizar preceptor:", error);
+    }
 };
+
+
+
 
 async function eliminarPreceptor(id) {
     try {
