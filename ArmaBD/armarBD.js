@@ -9,15 +9,15 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-const asistenciaRef = ref(db, 'preceptor');
+const asistenciaRef = ref(db, 'asistencia');
 
 
 async function subirDatos() {
     // Definimos el objeto con los datos del curso
     const dato = {
-      nombre:"",
-      turno: "",
-      obs: "Ninguna"
+      fichada:"1,2026-05-08T10:00:00"
+      // turno: "",
+      // obs: "Ninguna"
     };
 
     try {
