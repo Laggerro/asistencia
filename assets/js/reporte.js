@@ -122,47 +122,62 @@ btnPdf.addEventListener('click', () => {
 
     libreriaPdf().set(opciones).from(elemento).save();
 });
+
+
+
+
 const btnCargarCsv = document.getElementById('btnCargarCsv');
 const csvFile = document.getElementById('csvFile');
 
+
+
+
+
 btnCargarCsv.addEventListener('click', () => {
-    const file = csvFile.files[0]; // Corregido: seleccionamos el primer archivo
+    const file = csvFile.files[0];
     if (!file) return alert("Selecciona un archivo CSV primero");
 
+    console.log("Archivo detectado:", file.name);
+
     const reader = new FileReader();
-    reader.readAsText(file, 'UTF-8'); // Forzamos UTF-8 para las tildes
 
     reader.onload = function (e) {
-        const contenido = e.target.result;
-        const lineas = contenido.split(/\r?\n/); // Corta por cualquier salto de línea
+        const contenido = e.target.result.replace(/^\ufeff/, "");
+
+        // 1. Separador de líneas ultra-compatible (detecta cualquier tipo de salto)
+        const lineas = contenido.split(/\r\n|\n|\r/);
+        console.log("Total de líneas detectadas:", lineas.length);
 
         let cargados = 0;
+        const hoy = new Date().toLocaleDateString('es-AR');
 
-        // Empezamos en 1 para saltar encabezados
         for (let i = 1; i < lineas.length; i++) {
-            if (lineas[i].trim() === "") continue; // Salta líneas vacías
+            const linea = lineas[i].trim();
+            if (!linea) continue;
 
-            // Detecta si el separador es coma o punto y coma
-            const separador = lineas[i].includes(';') ? ';' : ',';
-            const columnas = lineas[i].split(separador);
+            // 2. Usamos punto y coma porque tu log mostró: "Alumno;dni;curso..."
+            const columnas = linea.split(';');
 
-            if (columnas.length >= 4) {
+            console.log(`Línea ${i}: ${columnas.length} columnas detectadas`);
+
+            if (columnas.length >= 5) {
                 const nuevoAlumno = {
                     nombre: columnas[0].trim(),
                     dni: columnas[1].trim(),
                     curso: columnas[2].trim(),
-                    huellaId: parseInt(columnas[3].trim()),
+                    huellaId: parseInt(columnas[3].trim()) || 0,
+                    foto: columnas[4].trim(),
+                    actualizado: hoy,
                     obs: "Ninguna",
                     borrar: "No"
                 };
 
-                push(ref(db, 'tbl_alumnos'), nuevoAlumno)
-                    .then(() => console.log("Alumno subido"))
-                    .catch(err => console.error("Error al subir:", err));
-
+                push(ref(db, 'tbl_alumnos'), nuevoAlumno);
                 cargados++;
             }
         }
-        alert(`Proceso finalizado. Se enviaron ${cargados} alumnos.`);
+        alert("Cargados: " + cargados);
     };
+
+    reader.readAsText(file, 'UTF-8');
 });
