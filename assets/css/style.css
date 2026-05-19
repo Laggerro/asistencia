@@ -1,0 +1,52 @@
+body {
+    font-family: sans-serif;
+    background: #f4f4f4;
+    padding: 20px;
+}
+
+.controles {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+#reporteContenedor {
+    background: white;
+    min-height: 29.7cm;
+    padding: 1cm;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+th,
+td {
+    border: 1px solid #ddd;
+    padding: 2px;
+    text-align: left;
+}
+
+th {
+    background-color: #f2f2f2;
+}
+
+.seccion-curso {
+    margin-top: 20px;
+}
+
+h3 {
+    color: #2c3e50;
+    border-bottom: 2px solid #2c3e50;
+    padding-bottom: 2px;
+}
+
+@media print {
+    .no-print {
+        display: none;
+    }
+}

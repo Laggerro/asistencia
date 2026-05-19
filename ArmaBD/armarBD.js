@@ -9,25 +9,29 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-const asistenciaRef = ref(db, 'asistencia');
+
+const asistenciaRef = ref(db, 'tbl_usuarios');
 
 
 async function subirDatos() {
-    // Definimos el objeto con los datos del curso
-    const dato = {
-      fichada:"1,2026-05-08T10:00:00"
-      // turno: "",
-      // obs: "Ninguna"
-    };
+  // Definimos el objeto con los datos del curso
+  const dato = {
+    usuario: "viviadfdefdfdfddfdfdna",
+    Password: "12345678",
+    rol: "Preceptor",
+    curso: "3ro B,1ro A,5to C",
+    aviso: "Sin aviso"
+  };
 
-    try {
-      // Usamos push para crear una nueva entrada con un ID único en Firebase
-      await push(asistenciaRef, dato);
-      console.log("¡Carga completada!");
-      console.log(`Preceptor guardado: ${dato.preceptor}`);
-    } catch (error) {
-      console.error("Error al subir:", error);
-    }
+
+  try {
+    // Usamos push para crear una nueva entrada con un ID único en Firebase
+    await push(asistenciaRef, dato);
+    console.log("¡Carga completadaaaaaaaaaaaaaaaaaaaaaaaaaaaa!");
+    console.log(`Preceptor guardtghthgthgtghado: ${dato.preceptor}`);
+  } catch (error) {
+    console.error("Error al subir:", error);
+  }
 }
 
 // Ejecutamos la función

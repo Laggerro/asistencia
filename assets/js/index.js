@@ -1,81 +1,84 @@
-import { getalumnosCollection, getAsistenciasHoy } from "./firebase.js";
+import { getalumnosCollection, listenAsistenciasHoy } from "./firebase.js";
 
-async function calcularProgresoPorCurso() {
-    try {
-        const [snapAlumnos, snapAsistencias] = await Promise.all([
-            getalumnosCollection(),
-            getAsistenciasHoy()
-        ]);
+async function iniciarMonitoreoAsistencias() {
+  try {
+    // Levantamos los datos estáticos de alumnos una sola vez al inicio
+    const snapAlumnos = await getalumnosCollection();
 
-        // Guardamos los IDs como NÚMEROS para que la comparación sea más fácil
-        const huellasPresentesHoy = new Set();
-        const hoy = new Date();
-        const fechaHoyFormateada = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
-        
-        console.log("Buscando fichajes para hoy:", fechaHoyFormateada);
+    // Iniciamos la escucha activa en tiempo real de las fichadas
+    listenAsistenciasHoy((snapAsistencias) => {
+      const huellasPresentesHoy = new Set();
+      const hoy = new Date();
+      const fechaHoyFormateada = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
+      
+      console.log("Nueva actualización de fichajes detectada. Buscando para:", fechaHoyFormateada);
 
-        snapAsistencias.forEach(doc => {
-            const registro = doc.val();
-            if (registro && registro.fichada) {
-                const partes = registro.fichada.split(',');
-                if (partes.length >= 2) {
-                    const idAlumno = partes[0].trim();
-                    const fechaCompleta = partes[1].trim();
+      // 1. Procesamos los nodos de asistencia en tiempo real con la nueva lógica JSON
+      snapAsistencias.forEach(doc => {
+        try {
+          const valorRaw = doc.val();
+          if (!valorRaw) return;
 
-                    if (fechaCompleta.includes(fechaHoyFormateada)) {
-                        // Guardamos como NÚMERO
-                        huellasPresentesHoy.add(Number(idAlumno));
-                    }
-                }
+          // Conversión del string JSON guardado en el ID dinámico
+          const registro = typeof valorRaw === "string" ? JSON.parse(valorRaw) : valorRaw;
+
+          if (registro && registro.fichada) {
+            const partes = registro.fichada.split(',');
+            if (partes.length >= 2) {
+              const idAlumno = partes[0].trim();
+              const fechaCompleta = partes[1].trim();
+              if (fechaCompleta.includes(fechaHoyFormateada)) {
+                huellasPresentesHoy.add(Number(idAlumno));
+              }
             }
-        });
+          }
+        } catch (e) {
+          console.error("Error al procesar registro:", doc.key, e);
+        }
+      });
 
-        console.log("IDs presentes hoy (como números):", Array.from(huellasPresentesHoy));
+      // 2. Ejecutamos los contadores utilizando el Set actualizado
+      let totalPresentes = 0;
+      let totalAusentes = 0;
+      let totalSinHuella = 0;
+      const cursos = {};
 
-        let totalPresentes = 0;
-        let totalAusentes = 0;
-        let totalSinHuella = 0;
-        const cursos = {};
+      snapAlumnos.forEach(doc => {
+        const alumno = doc.val();
+        const hIdRaw = alumno.huellaId;
+        const hIdNum = Number(hIdRaw);
+        const cursoNombre = alumno.curso || "Sin Curso";
 
-        snapAlumnos.forEach(doc => {
-            const alumno = doc.val();
-            // Convertimos el ID del alumno a NÚMERO para comparar
-            const hIdRaw = alumno.huellaId;
-            const hIdNum = Number(hIdRaw);
-            const cursoNombre = alumno.curso || "Sin Curso";
+        if (hIdRaw === "-1" || hIdRaw === -1) {
+          totalSinHuella++;
+        } else {
+          if (huellasPresentesHoy.has(hIdNum)) {
+            totalPresentes++;
+            if (!cursos[cursoNombre]) cursos[cursoNombre] = { total: 0, presentes: 0 };
+            cursos[cursoNombre].total++;
+            cursos[cursoNombre].presentes++;
+          } else {
+            totalAusentes++;
+            if (!cursos[cursoNombre]) cursos[cursoNombre] = { total: 0, presentes: 0 };
+            cursos[cursoNombre].total++;
+          }
+        }
+      });
 
-            // DEBUG: Solo para los primeros alumnos, ver qué traen
-            if (totalPresentes + totalAusentes < 5) {
-                console.log(`Alumno: ${alumno.nombre || 'S/N'} - huellaId original: ${hIdRaw} - convertido: ${hIdNum}`);
-            }
+      // 3. Renderizado automático instantáneo en la UI
+      renderizarGrafico(totalPresentes, totalAusentes, totalSinHuella);
+      actualizarTotalesUI(totalPresentes, totalAusentes, totalSinHuella);
+      renderizarTablaCursos(cursos);
+    });
 
-            if (hIdRaw === "-1" || hIdRaw === -1) {
-                totalSinHuella++;
-            } else {
-                // Comparamos número contra número
-                if (huellasPresentesHoy.has(hIdNum)) {
-                    totalPresentes++;
-                    if (!cursos[cursoNombre]) cursos[cursoNombre] = { total: 0, presentes: 0 };
-                    cursos[cursoNombre].total++;
-                    cursos[cursoNombre].presentes++;
-                } else {
-                    totalAusentes++;
-                    if (!cursos[cursoNombre]) cursos[cursoNombre] = { total: 0, presentes: 0 };
-                    cursos[cursoNombre].total++;
-                }
-            }
-        });
-
-        console.log(`FINAL -> Presentes: ${totalPresentes}, Ausentes: ${totalAusentes}`);
-
-        renderizarGrafico(totalPresentes, totalAusentes, totalSinHuella);
-        actualizarTotalesUI(totalPresentes, totalAusentes, totalSinHuella);
-        renderizarTablaCursos(cursos);
-
-    } catch (error) {
-        console.error("Error general:", error);
-    }
+  } catch (error) {
+    console.error("Error crítico al inicializar el monitoreo:", error);
+  }
 }
+
+
+
+
 
 // ... (Las funciones actualizarTotalesUI, renderizarTablaCursos y renderizarGrafico se mantienen igual)
 // Asegúrate de incluirlas al final de tu archivo.
@@ -87,8 +90,8 @@ function actualizarTotalesUI(p, a, s) {
         <div class="text-center mb-2"><strong>Total Alumnos: ${p + a + s}</strong></div>
         <div class="d-flex justify-content-between text-success"><span>Presentes:</span> <span>${p}</span></div>
         <div class="d-flex justify-content-between text-danger"><span>Ausentes:</span> <span>${a}</span></div>
-        <div class="d-flex justify-content-between text-muted border-top mt-2 pt-1">
-            <small>Sin Huella (-1):</small> <small>${s}</small>
+        <div class="d-flex justify-content-between text-normal border-top mt-2 pt-1">
+            <small>Sin registro de Huella :</small> <small>${s}</small>
         </div>`;
 }
 
@@ -127,4 +130,7 @@ function renderizarGrafico(p, a, s) {
     });
 }
 
-window.addEventListener("DOMContentLoaded", calcularProgresoPorCurso);
+
+// Escuchamos el evento de carga del DOM para arrancar el listener activo
+window.addEventListener("DOMContentLoaded", iniciarMonitoreoAsistencias);
+//window.addEventListener("DOMContentLoaded", calcularProgresoPorCurso);
