@@ -6,57 +6,68 @@ const btnPdf = document.getElementById('btnPdf');
 const resultado = document.getElementById('resultado');
 
 btnGenerar.addEventListener('click', async () => {
+    // 1. Declaramos la variable capturando el valor del input
     const fechaSeleccionada = document.getElementById('fechaFiltro').value;
-    console.log("Fecha del calendario:", fechaSeleccionada); // Debe salir 2026-05-07
+    console.log("Fecha del calendario:", fechaSeleccionada); 
 
     if (!fechaSeleccionada) return alert("Selecciona una fecha");
 
+    // 2. Convertimos el formato de fecha para Firebase: "2026-05-22" -> "2026_05_22"
+    const fechaNodoFirebase = fechaSeleccionada.replace(/-/g, '_');
+
+    // 3. Consultamos ÚNICAMENTE el subnodo de la fecha elegida y los alumnos
     const [asistSnap, alumnosSnap] = await Promise.all([
-        get(ref(db, "asistencia")),
+        get(ref(db, `asistencia/${fechaNodoFirebase}`)),
         get(ref(db, "tbl_alumnos"))
     ]);
 
-    const asistencias = asistSnap.val() || {};
+    const asistenciasHoy = asistSnap.val() || {};
     const alumnos = alumnosSnap.val() || {};
     const reporteMap = {};
 
-    Object.values(asistencias).forEach(asist => {
-        // 1. Limpiamos espacios por si las dudas
-        const datoLimpio = asist.fichada.trim();
+    // 4. Recorremos las asistencias de ese día específico
+    Object.values(asistenciasHoy).forEach(asist => {
+        let datosAsistencia;
 
-        // 2. Separamos por la coma
-        const partes = datoLimpio.split(',');
-        const hId = partes[0]; // "1"
-        const fechaHoraISO = partes[1]; // "2026-05-07T08:18:59"
+        try {
+            // Convertimos el texto JSON a objeto real si viene entre comillas
+            datosAsistencia = typeof asist === "string" ? JSON.parse(asist) : asist;
+        } catch (error) {
+            console.error("Error al parsear el registro de asistencia:", asist);
+            return; // Salta este registro roto
+        }
+
+        // Validación: Si no hay datos válidos o falta 'fichada', lo saltamos
+        if (!datosAsistencia || !datosAsistencia.fichada) return;
+
+        // Separamos los datos por la coma
+        const partes = datosAsistencia.fichada.trim().split(',');
+        const hId = partes[0]; 
+        const fechaHoraISO = partes[1]; 
 
         if (fechaHoraISO) {
-            const fechaSolo = fechaHoraISO.substring(0, 10); // "2026-05-07"
+            // Buscamos al alumno por su huellaId
+            const alumnoInfo = Object.values(alumnos).find(a => a.huellaId == hId);
 
-            // LOG DE CONTROL: Quita esto cuando funcione
-            console.log(`Comparando: DB(${fechaSolo}) vs Calendario(${fechaSeleccionada})`);
+            if (alumnoInfo) {
+                const curso = alumnoInfo.curso;
+                if (!reporteMap[curso]) reporteMap[curso] = [];
 
-            if (fechaSolo === fechaSeleccionada) {
-                // Buscamos al alumno. Usamos == para no tener problemas si uno es string y otro number
-                const alumnoInfo = Object.values(alumnos).find(a => a.huellaId == hId);
-
-                if (alumnoInfo) {
-                    const curso = alumnoInfo.curso;
-                    if (!reporteMap[curso]) reporteMap[curso] = [];
-
-                    reporteMap[curso].push({
-                        nombre: alumnoInfo.nombre,
-                        dni: alumnoInfo.dni,
-                        hora: fechaHoraISO.substring(11, 16)
-                    });
-                } else {
-                    console.warn(`No se encontró alumno para huellaId: ${hId}`);
-                }
+                reporteMap[curso].push({
+                    nombre: alumnoInfo.nombre,
+                    dni: alumnoInfo.dni,
+                    hora: fechaHoraISO.substring(11, 16) // Extrae "19:28"
+                });
+            } else {
+                console.warn(`No se encontró alumno para huellaId: ${hId}`);
             }
         }
     });
 
+    // 5. Renderizamos el resultado final
     renderizarReporte(reporteMap, fechaSeleccionada);
 });
+
 
 function renderizarReporte(data, fecha) {
     if (Object.keys(data).length === 0) {

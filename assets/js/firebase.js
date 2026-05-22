@@ -74,23 +74,9 @@ export const marcarParaBorrar = (id) =>
     update(ref(db, `${nodoAlumnos}/${id}`), { obs: "Borrar" });
 
 /** 
- * --- SECCIÓN ASISTENCIAS --- habilitar si no funciona
- * export const getAsistenciasHoy = () => get(ref(db, "asistencia"));
- */
-
-// Cambia tu declaración estática por esta versión con callback listener
-/* export const listenAsistenciasHoy = (callback) => {
-  const asistenciaRef = ref(db, "asistencia");
-  return onValue(asistenciaRef, (snapshot) => {
-    callback(snapshot);
-  });
-};
- */
-
-/** 
  * --- SECCIÓN ASISTENCIAS --- 
  */
-// Ahora recibe la fecha formateada (ej: "2026#05#21") para escuchar solo ese nodo
+
 export const listenAsistenciasHoy = (fechaFormateada, callback) => {
     const asistenciaRef = ref(db, `asistencia/${fechaFormateada}`);
     return onValue(asistenciaRef, (snapshot) => {
@@ -99,15 +85,10 @@ export const listenAsistenciasHoy = (fechaFormateada, callback) => {
 };
 
 
-
-
-
-
-
 /** 
  * --- SECCIÓN PRECEPTORES ---
  */
-// Función para guardar (Aseguramos que reciba strings)
+
 export const addPreceptor = (nombre, turno, usuarioApp, passApp, cargo, obs) =>
     push(ref(db, coleccionPreceptores), { nombre, turno, usuarioApp, passApp, cargo, obs });
 
@@ -121,3 +102,6 @@ export const updatePreceptorCollection = (id, newFields) =>
     update(ref(db, `${coleccionPreceptores}/${id}`), newFields);
 
 export const getPreceptorCollection = (id) => get(ref(db, `${coleccionPreceptores}/${id}`));
+
+
+export {  ref, get };

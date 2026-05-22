@@ -35,7 +35,7 @@ $pagina_actual = basename($_SERVER['PHP_SELF']);
         </li>
         
         <li class="nav-item">
-          <a class="nav-link <?php echo ($pagina_actual == 'ayuda.php') ? 'active' : ''; ?>" href="ayuda.php">Ayuda</a>
+          <a class="nav-link <?php echo ($pagina_actual == 'reportes.php') ? 'active' : ''; ?>" href="reporte.php">Reportes</a>
         </li>
 
       </ul>

@@ -1,0 +1,49 @@
+.titulo-control {
+    color: #06402B;
+    font-size: 32px;
+    font-weight: 800;
+    text-align: center;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+}
+.tabla-control {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: sans-serif;
+    font-size: 13px;
+}
+.tabla-control th {
+    background-color: #A9DFBF;
+    color: #06402B;
+    border: 1px solid #7FB3D5;
+    padding: 6px;
+    text-align: center;
+    font-weight: bold;
+}
+.tabla-control th.col-nombre, .tabla-control th.col-total {
+    background-color: #06402B;
+    color: white;
+}
+.tabla-control td {
+    border: 1px solid #D5D8DC;
+    padding: 8px;
+    vertical-align: middle;
+}
+.celda-asist {
+    text-align: center;
+    font-weight: bold;
+    width: 25px;
+}
+/* Estilos visuales basados en tus reglas de negocio */
+.asist-presente { color: #196F3D; background-color: #D4EFDF; }      /* ✔ */
+.asist-tarde-breve { color: #B7950B; background-color: #FCF3CF; }   /* t */
+.asist-tarde-media { color: #A04000; background-color: #FEDBB7; }   /* T */
+.asist-retraso { color: #922B21; background-color: #FADBD8; }       /* R */
+.asist-ausente { color: #7B241C; background-color: #FDEDEC; }       /* A */
+
+.celda-total {
+    text-align: center;
+    font-weight: bold;
+    background-color: #F2F4F4;
+}

@@ -5,6 +5,13 @@
     <meta charset="UTF-8">
     <title>Reporte de Asistencias</title>
     <link rel="stylesheet" href="assets/css/style.css">
+
+ <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="assets/css/listado.css" />
+
+
     <!-- Librería para generar PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.12.1/html2pdf.bundle.min.js"
         integrity="sha512-D25Z8/1q2z65ZpJ3NzY6XiPZfwjhbv34OTQHDIZd+KPK+uWCovGt+fMkSzW8ArzCMFUgZt6Cdu7qoXNuy6a2GA=="
@@ -12,7 +19,7 @@
 </head>
 
 <body>
-
+  <?php include 'navbar.php'; ?>
     <div class="controles no-print">
         <label>Seleccionar Día: </label>
         <input type="date" id="fechaFiltro">
