@@ -79,12 +79,29 @@ export const marcarParaBorrar = (id) =>
  */
 
 // Cambia tu declaración estática por esta versión con callback listener
-export const listenAsistenciasHoy = (callback) => {
+/* export const listenAsistenciasHoy = (callback) => {
   const asistenciaRef = ref(db, "asistencia");
   return onValue(asistenciaRef, (snapshot) => {
     callback(snapshot);
   });
 };
+ */
+
+/** 
+ * --- SECCIÓN ASISTENCIAS --- 
+ */
+// Ahora recibe la fecha formateada (ej: "2026#05#21") para escuchar solo ese nodo
+export const listenAsistenciasHoy = (fechaFormateada, callback) => {
+    const asistenciaRef = ref(db, `asistencia/${fechaFormateada}`);
+    return onValue(asistenciaRef, (snapshot) => {
+        callback(snapshot);
+    });
+};
+
+
+
+
+
 
 
 /** 

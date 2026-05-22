@@ -5,9 +5,6 @@ const btnGenerar = document.getElementById('btnGenerar');
 const btnPdf = document.getElementById('btnPdf');
 const resultado = document.getElementById('resultado');
 
-
-
-
 btnGenerar.addEventListener('click', async () => {
     const fechaSeleccionada = document.getElementById('fechaFiltro').value;
     console.log("Fecha del calendario:", fechaSeleccionada); // Debe salir 2026-05-07
@@ -123,15 +120,8 @@ btnPdf.addEventListener('click', () => {
     libreriaPdf().set(opciones).from(elemento).save();
 });
 
-
-
-
 const btnCargarCsv = document.getElementById('btnCargarCsv');
 const csvFile = document.getElementById('csvFile');
-
-
-
-
 
 btnCargarCsv.addEventListener('click', () => {
     const file = csvFile.files[0];
