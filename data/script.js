@@ -1,13 +1,13 @@
 window.onload = function () {
     // 1. Configuración de Firebase
-    const firebaseConfig = { 
-        databaseURL: "https://asistencia-93328-default-rtdb.firebaseio.com" 
+    const firebaseConfig = {
+        databaseURL: "https://asistencia-93328-default-rtdb.firebaseio.com"
     };
 
     if (typeof firebase !== 'undefined') {
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        
+
         const listaEnrolar = document.getElementById('lista-alumnos');
         const listaBorrar = document.getElementById('lista-borrar');
         const statusMsg = document.getElementById('status');
@@ -19,20 +19,20 @@ window.onload = function () {
             let countEnrolar = 0;
             let countBorrar = 0;
 
-           snapshot.forEach((childSnapshot) => {
-    const uid = childSnapshot.key;
-    const data = childSnapshot.val();
+            snapshot.forEach((childSnapshot) => {
+                const uid = childSnapshot.key;
+                const data = childSnapshot.val();
 
-    // 1. Lógica para la lista de BORRADO (Si el campo borrar es "Si")
-    if (data.borrar === "Si") {
-        countBorrar++;
-        
-        // Determina si va al sensor o directo a Firebase
-        const funcionBorrar = (data.huellaId === -1 || data.huellaId === "-1") 
-            ? `borrarSoloFirebase('${uid}')` 
-            : `borrarConSensor('${uid}')`;
+                // 1. Lógica para la lista de BORRADO (Si el campo borrar es "Si")
+                if (data.borrar === "Si") {
+                    countBorrar++;
 
-        listaBorrar.innerHTML += `
+                    // Determina si va al sensor o directo a Firebase
+                    const funcionBorrar = (data.huellaId === -1 || data.huellaId === "-1")
+                        ? `borrarSoloFirebase('${uid}')`
+                        : `borrarConSensor('${uid}')`;
+
+                    listaBorrar.innerHTML += `
             <tr>
                 <td>${data.nombre || 'Sin nombre'}</td>
                 <td>${data.dni || '-'}</td>
@@ -41,18 +41,18 @@ window.onload = function () {
                     <button class="btn-recuperar" onclick="recuperarAlumno('${uid}')">Recuperar</button>
                 </td>
             </tr>`;
-    }
-    // 2. Lógica para la lista de ENROLAR (Si NO está para borrar y no tiene huellaId)
-    else if ((data.huellaId === -1 || data.huellaId === "-1") && data.borrar !== "Si") {
-        countEnrolar++;
-        listaEnrolar.innerHTML += `
+                }
+                // 2. Lógica para la lista de ENROLAR (Si NO está para borrar y no tiene huellaId)
+                else if ((data.huellaId === -1 || data.huellaId === "-1") && data.borrar !== "Si") {
+                    countEnrolar++;
+                    listaEnrolar.innerHTML += `
             <tr>
                 <td>${data.nombre || 'Sin nombre'}</td>
                 <td>${data.dni || '-'}</td>
                 <td><button class="btn-enrolar" onclick="enrolar('${uid}')">Registrar</button></td>
             </tr>`;
-    }
-});
+                }
+            });
 
 
             // Actualizar mensajes de estado
@@ -69,7 +69,8 @@ window.onload = function () {
 
 // --- CONFIGURACIÓN Y FUNCIONES GLOBALES ---
 
-const ipESP32 = "192.168.0.65";
+//const ipESP32 = "192.168.0.65";
+const ipESP32 = window.location.host;
 
 // Función para ENROLAR (Llama al ESP32)
 window.enrolar = function (uid) {
@@ -86,7 +87,7 @@ window.borrarConSensor = function (uid) {
 // Función para BORRAR CUANDO NO HAY HUELLA (Directo a Firebase, sin ESP32)
 window.borrarSoloFirebase = function (uid) {
     if (!confirm("Este alumno no tiene huella registrada. ¿Continuar?")) return;
-    
+
     firebase.database().ref('tbl_alumnos/' + uid).remove()
         .then(() => alert("Registro borrado de la base de datos"))
         .catch(err => alert("Error al borrar: " + err));
@@ -121,11 +122,11 @@ window.recuperarAlumno = function (uid) {
     firebase.database().ref('tbl_alumnos/' + uid).update({
         borrar: "No"
     })
-    .then(() => {
-        alert("Alumno recuperado. Volverá al listado general.");
-    })
-    .catch(err => {
-        console.error("Error al recuperar:", err);
-        alert("No se pudo recuperar el registro.");
-    });
+        .then(() => {
+            alert("Alumno recuperado. Volverá al listado general.");
+        })
+        .catch(err => {
+            console.error("Error al recuperar:", err);
+            alert("No se pudo recuperar el registro.");
+        });
 };

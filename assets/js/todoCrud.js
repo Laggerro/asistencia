@@ -14,7 +14,7 @@ async function refrescarTablas() {
     if (document.getElementById("tablaalumnosSinHuella")) await mostraralumnosSinHuella();
     if (document.getElementById("tablaCursos")) await mostrarCursosEnHTML();
 }
-
+// carga los alumnos en listado.php
 async function mostraralumnosEnHTML() {
     try {
         const tabla = document.querySelector("#tablaalumnos tbody");
@@ -33,8 +33,9 @@ async function mostraralumnosEnHTML() {
             const id = doc.key;
 
             if (alumno.borrar === "Si") return;
+            if (alumno.huellaId === -1 || alumno.huellaId === "-1") return;
             if (filtroCurso && alumno.curso !== filtroCurso) return;
-            
+
             const coincideNombre = alumno.nombre?.toLowerCase().includes(busqueda);
             const coincideDNI = alumno.dni?.toString().includes(busqueda);
             if (busqueda && !coincideNombre && !coincideDNI) return;
@@ -103,8 +104,6 @@ async function mostraralumnosSinHuella() {
         console.error("Error al obtener los alumnos sin huella:", error);
     }
 }
-
-
 
 async function mostrarCursosEnHTML() {
     try {
@@ -179,10 +178,12 @@ window.miModal = async function (idModal, idRef = "") {
         if (idModal === "agregaralumnoModal") await cargarCursosEnModal();
         if (idModal === "agregarCursoModal") await cargarPreceptoresEnModal();
         if (idModal === "detallealumnoModal") await cargarDetallealumno(idRef);
-        if (idModal === "editaralumnoModal") await getalumnoUpdateCollection(idRef);
         if (idModal === "detalleCursoModal") await cargarDetalleCurso(idRef);
         if (idModal === "editarCursoModal") await getCursoUpdateCollection(idRef);
-        
+        if (idModal === "editaralumnoModal") {
+            await cargarCursosEnModal(); // <--- Agrega esto primero para poblar el select
+            await getalumnoUpdateCollection(idRef);
+        }
         if (idModal.includes("eliminar")) {
             const btn = modalElement.querySelector("#confirmDeleteBtn");
             if (btn) btn.onclick = async () => {
@@ -233,7 +234,7 @@ window.addNuevoCurso = async function (event) {
     if (!preceptorID) return alert("Seleccione un preceptor");
 
     try {
-        await addCurso(fd.get("curso"), fd.get("ubicacion"), fd.get("capacidad"), fd.get("obsCurso"), preceptorID);
+        await addCurso(fd.get("curso"), fd.get("horaIn"), fd.get("ubicacion"), fd.get("capacidad"), fd.get("obsCurso"), preceptorID);
         bootstrap.Modal.getInstance(document.getElementById('agregarCursoModal')).hide();
         await mostrarCursosEnHTML();
         window.mostrarAlerta({ tipoToast: "success", mensaje: "¡Curso creado!" });
@@ -257,11 +258,11 @@ window.addNuevoalumno = async function (event) {
 
 window.addEventListener("DOMContentLoaded", async () => {
     await refrescarTablas();
-    
+
     // Filtros de búsqueda (si existen)
     document.getElementById("buscarAlumno")?.addEventListener("input", mostraralumnosEnHTML);
     document.getElementById("filtroCurso")?.addEventListener("change", mostraralumnosEnHTML);
-    
+
     if (document.getElementById("filtroCurso")) {
         const select = document.getElementById("filtroCurso");
         const cursosSnap = await getCursosCollection();
@@ -317,6 +318,7 @@ async function cargarDetalleCurso(id) {
 
             contenedor.innerHTML = ` 
                 <li class="list-group-item"><b>Curso: </b> ${data.curso || "N/A"}</li>
+                <li class="list-group-item"><b>Horario ingreso: </b> ${data.horaIn || "N/A"}</li>
                 <li class="list-group-item"><b>Ubicación:</b> ${data.ubicacion || "N/A"}</li>
                 <li class="list-group-item"><b>Capacidad:</b> ${data.capacidad || "N/A"}</li>
                 <li class="list-group-item"><b>Obs: </b> ${data.obs || "N/A"}</li>
@@ -356,6 +358,7 @@ async function getCursoUpdateCollection(id) {
             const data = cursoDoc.val();
             // Buscamos por ID o Name según lo tengas en tu modalEditarCurso.php
             if (document.querySelector("#idCurso")) document.querySelector("#idCurso").value = id;
+            if (document.querySelector("#horaIn")) document.querySelector("#horaIn").value = data.horaIn || "";
             if (document.querySelector("#curso")) document.querySelector("#curso").value = data.curso || "";
             if (document.querySelector("#ubicacion")) document.querySelector("#ubicacion").value = data.ubicacion || "";
             if (document.querySelector("#capacidad")) document.querySelector("#capacidad").value = data.capacidad || "";
@@ -397,6 +400,7 @@ window.actualizarCurso = async function (event) {
         // Ajustamos los campos para que coincidan con tu estructura de Firebase
         const camposUpdate = {
             curso: data.curso,
+            horaIn: data.horaIn,
             ubicacion: data.ubicacion,
             capacidad: data.capacidad,
             obs: data.obsCurso // En tu DB es 'obs' pero el input suele ser 'obsCurso'
@@ -415,9 +419,9 @@ window.actualizarCurso = async function (event) {
  */
 async function eliminaralumno(id) {
     try {
-        const alumnoSnapshot = await getalumnoCollection(id); 
+        const alumnoSnapshot = await getalumnoCollection(id);
         if (!alumnoSnapshot.exists()) return;
-        
+
         const alumno = alumnoSnapshot.val();
 
         // Si no tiene huella asignada (-1), borrado físico directo
@@ -427,9 +431,9 @@ async function eliminaralumno(id) {
         } else {
             // Si tiene huella, borrado lógico para que el ESP32 lo procese
             await updatealumnoCollection(id, { borrar: "Si" });
-            window.mostrarAlerta({ 
-                tipoToast: "success", 
-                mensaje: "Enviando orden de borrado al sensor ESP" 
+            window.mostrarAlerta({
+                tipoToast: "success",
+                mensaje: "Enviando orden de borrado al sensor ESP"
             });
         }
         await refrescarTablas();
@@ -448,7 +452,7 @@ async function eliminarCurso(id) {
         // Eliminación visual inmediata de la fila
         const fila = document.getElementById(id);
         if (fila) fila.remove();
-        
+
         window.mostrarAlerta({ tipoToast: "success", mensaje: "Curso eliminado correctamente" });
         await refrescarTablas();
     } catch (error) {

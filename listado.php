@@ -15,7 +15,7 @@
 </head>
 
 <body>
-<?php include 'navbar.php'; ?>
+  <?php include 'navbar.php'; ?>
 
   <h1 class="text-center mt-5 mb-5 fw-bold">
     Listado General de Alumnos registrados
@@ -26,55 +26,48 @@
   <div class="container mb-5">
     <div class="row justify-content-md-center">
       <div class="col-md-12">
-    <h5 class="text-center mb-3">Seleccione filtro</h5>
+        <h5 class="text-center mb-3">Seleccione filtro</h5>
 
-    <!-- Todo dentro de este ROW se alineará horizontalmente -->
-    <div class="row mb-3 align-items-center">
-        <!-- Buscador -->
-        <div class="col-md-4">
+        <!-- Todo dentro de este ROW se alineará horizontalmente -->
+        <div class="row mb-3 align-items-center">
+          <!-- Buscador -->
+          <div class="col-md-4">
             <input type="text" id="buscarAlumno" class="form-control" placeholder="Buscar por Apellido o DNI...">
-        </div>
+          </div>
 
-        <!-- Filtro Curso -->
-        <div class="col-md-4">
+          <!-- Filtro Curso -->
+          <div class="col-md-4">
             <select id="filtroCurso" class="form-select">
-                <option value="">Todos los cursos</option>
+              <option value="">Todos los cursos</option>
             </select>
-        </div>
+          </div>
 
-        <!-- Contador alineado a la derecha -->
-        <div class="col-md-4 text-end">
-          <h5>
-            <span class="badge bg-primary p-3">
+          <!-- Contador alineado a la derecha -->
+          <div class="col-md-4 text-end">
+            <h5>
+              <span class="badge bg-primary p-3">
                 Total coincidencias: <span id="contadorAlumnos">0</span>
-            </span>
-          </h5>
+              </span>
+            </h5>
+          </div>
         </div>
-    </div>
+        <hr />
 
-    
-    <hr />
-
-    <div class="table-responsive">
-        <table class="table table-hover" id="tablaalumnos">
+        <div class="table-responsive">
+          <table class="table table-hover" id="tablaalumnos">
             <thead>
-                <tr>
-                    <th>Curso</th>
-                    <th>Apellido y Nombre</th>
-                    <th>DNI</th>
-                    <th>Obs</th>
-                    <th>Acciones</th>
-                </tr>
+              <tr>
+                <th>Curso</th>
+                <th>Apellido y Nombre</th>
+                <th>DNI</th>
+                <th>Obs</th>
+                <th>Acciones</th>
+              </tr>
             </thead>
             <tbody></tbody>
-        </table>
-    </div>
-</div>
-
-
-
-
-
+          </table>
+        </div>
+      </div>
 
     </div>
   </div>

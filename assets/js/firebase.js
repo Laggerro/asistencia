@@ -35,8 +35,8 @@ const nodoAlumnos = "tbl_alumnos";
 /** 
  * --- SECCIÓN CURSOS ---
  */
-export const addCurso = (curso, ubicacion, capacidad, obs, preceptorID) =>
-    push(ref(db, coleccionCursos), { curso, ubicacion, capacidad, obs, preceptorID });
+export const addCurso = (curso, horaIn, ubicacion, capacidad, obs, preceptorID) =>
+    push(ref(db, coleccionCursos), { curso, horaIn, ubicacion, capacidad, obs, preceptorID });
 
 export const getCursosCollection = () => get(ref(db, coleccionCursos));
 
@@ -104,4 +104,4 @@ export const updatePreceptorCollection = (id, newFields) =>
 export const getPreceptorCollection = (id) => get(ref(db, `${coleccionPreceptores}/${id}`));
 
 
-export {  ref, get };
+export { ref, get };
