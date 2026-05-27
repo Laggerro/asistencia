@@ -13,10 +13,10 @@
 #define RXD2 16
 #define TXD2 17
 // CONFIGURACIÓN DE PINES DIGITALES PUROS (SIN INTERFERENCIA DE SERIAL NI WIFI)
-#define LED_ROJO 26    // Etiqueta D26 (Lado izquierdo) - Estable y libre de ruidos
-#define LED_VERDE 18   // Etiqueta D18 (Lado derecho)   - Digital puro, sin parpadeos
-#define LED_AZUL 5     // Etiqueta D5  (Lado derecho)   - Digital puro, sin parpadeos
-#define BUZZER 25      // Etiqueta D25 (Lado izquierdo) - Salida digital directa de alta corriente
+#define LED_ROJO 26   // Etiqueta D26 (Lado izquierdo) - Estable y libre de ruidos
+#define LED_VERDE 18  // Etiqueta D18 (Lado derecho)   - Digital puro, sin parpadeos
+#define LED_AZUL 5    // Etiqueta D5  (Lado derecho)   - Digital puro, sin parpadeos
+#define BUZZER 25     // Etiqueta D25 (Lado izquierdo) - Salida digital directa de alta corriente
 
 // CONFIGURACIÓN FIREBASE
 const char* FB_BASE_URL = "https://asistencia-93328-default-rtdb.firebaseio.com";
@@ -31,6 +31,7 @@ Preferences prefs;
 
 // VARIABLES GLOBALES
 String ssid, pass;
+String ipGuardada = "0.0.0.0";
 unsigned long lastSync = 0;
 unsigned long btTimer = 0;
 unsigned long lastWifiRetry = 0;
@@ -39,6 +40,7 @@ bool btActivo = true;
 bool btAutenticado = false;
 bool ventanaAbierta = true;
 bool wifiIniciado = false;
+
 
 // ENUMERACIÓN DE ALERTAS PARA EL SISTEMA
 enum TipoAlerta {
@@ -98,6 +100,7 @@ void setup() {
   prefs.begin("wifi-config", true);
   ssid = prefs.getString("ssid", "Vilers-2");
   pass = prefs.getString("pass", "Pabada686");
+  ipGuardada = prefs.getString("ip_local", "0.0.0.0");
   prefs.end();
 
   Serial2.begin(57600, SERIAL_8N1, RXD2, TXD2);
@@ -142,7 +145,8 @@ void loop() {
         if (msg == "OBIWANKENOBI") {
           btAutenticado = true;
           ventanaAbierta = false;
-          SerialBT.println("Acceso OK.");
+          SerialBT.printf("IP_LOCAL:[%s]\n", ipGuardada.c_str()); 
+          Serial.printf("[BT TX] Enviando IP guardada a la App: %s\n", ipGuardada.c_str());
         } else if (msg == "CORTARBT" && btAutenticado) {
           activarModoWifi();
         } else if (msg.startsWith("SSIDPASS:")) {
@@ -203,8 +207,18 @@ void verificarConexion() {
   } else {
     static bool logConexion = false;
     if (!logConexion) {
+       String ipActual = WiFi.localIP().toString();
       Serial.print("[WIFI] ¡Conectado con éxito! Dirección IP: ");
       Serial.println(WiFi.localIP());
+
+      if (ipActual != ipGuardada) {
+        ipGuardada = ipActual;
+        prefs.begin("wifi-config", false);  // Modo escritura
+        prefs.putString("ip_local", ipGuardada);
+        prefs.end();
+        Serial.println("[PREFERENCES] Nueva dirección IP respaldada en Flash.");
+      }
+
       logConexion = true;
     }
   }
@@ -320,41 +334,41 @@ void handleEnrol() {
     server.send(200, "text/plain", "No hay espacio para mas huellas");
     return;
   }
-  
+
   Serial.println("[ENROL] Iniciando proceso responsivo...");
 
   // ==========================================
   // PASO 1: COLOCAR EL DEDO POR PRIMERA VEZ
   // ==========================================
-  digitalWrite(LED_AZUL, HIGH); // Se enciende: Esperando que apoye el dedo
-  
+  digitalWrite(LED_AZUL, HIGH);  // Se enciende: Esperando que apoye el dedo
+
   // Bucle de espera activa: Mientras NO haya un dedo apoyado, el LED sigue encendido
   unsigned long timeout1 = millis();
   while (finger.getImage() != FINGERPRINT_OK) {
-    if (millis() - timeout1 > 10000) { // Timeout de 10 segundos por seguridad
+    if (millis() - timeout1 > 10000) {  // Timeout de 10 segundos por seguridad
       server.send(200, "text/plain", "Error: Tiempo de espera agotado");
       digitalWrite(LED_AZUL, LOW);
       notificarSistema(ENROL_ERROR);
       return;
     }
-    delay(50); // Muestreo rápido del sensor
+    delay(50);  // Muestreo rápido del sensor
   }
-  
+
   // ¡Dedo detectado! Apagamos el LED Azul inmediatamente para dar feedback visual
-  digitalWrite(LED_AZUL, LOW); 
-  
+  digitalWrite(LED_AZUL, LOW);
+
   // Procesar la primera captura
   if (finger.image2Tz(1) != FINGERPRINT_OK) {
     server.send(200, "text/plain", "Error: No se pudo procesar la imagen 1");
     notificarSistema(ENROL_ERROR);
     return;
   }
-  
+
   // ==========================================
   // PASO 2: SOLICITAR QUE LEVANTE EL DEDO
   // ==========================================
   Serial.println("[ENROL] Paso 1 capturado. Esperando que levante el dedo...");
-  
+
   // Hacemos parpadear el LED azul rápido para indicarle físicamente que debe RETIRAR el dedo
   unsigned long waitTime = millis();
   while (finger.getImage() != FINGERPRINT_NOFINGER) {
@@ -362,17 +376,17 @@ void handleEnrol() {
     delay(100);
     digitalWrite(LED_AZUL, LOW);
     delay(100);
-    if (millis() - waitTime > 6000) break; 
+    if (millis() - waitTime > 6000) break;
   }
-  digitalWrite(LED_AZUL, LOW); // Asegurar que quede apagado
-  delay(1000); // Pausa de confort para que se prepare para el segundo paso
+  digitalWrite(LED_AZUL, LOW);  // Asegurar que quede apagado
+  delay(1000);                  // Pausa de confort para que se prepare para el segundo paso
 
   // ==========================================
   // PASO 3: COLOCAR EL DEDO PARA VERIFICAR
   // ==========================================
   Serial.println("[ENROL] Coloque el mismo dedo nuevamente...");
-  digitalWrite(LED_AZUL, HIGH); // Se vuelve a encender: Esperando que apoye para verificar
-  
+  digitalWrite(LED_AZUL, HIGH);  // Se vuelve a encender: Esperando que apoye para verificar
+
   // Bucle de espera activa para el segundo toque
   unsigned long timeout2 = millis();
   while (finger.getImage() != FINGERPRINT_OK) {
@@ -384,13 +398,13 @@ void handleEnrol() {
     }
     delay(50);
   }
-  
+
   // ¡Dedo detectado por segunda vez! Apagamos el LED Azul inmediatamente
   digitalWrite(LED_AZUL, LOW);
-  
+
   // Procesar la segunda captura y emparejar
   if (finger.image2Tz(2) == FINGERPRINT_OK && finger.createModel() == FINGERPRINT_OK && finger.storeModel(id) == FINGERPRINT_OK) {
-    
+
     // Almacenamiento exitoso en hardware, procedemos a impactar en Firebase
     WiFiClientSecure client;
     client.setInsecure();
@@ -399,20 +413,20 @@ void handleEnrol() {
     http.begin(client, url);
     int httpResponseCode = http.PUT(String(id));
     Serial.printf("[ENROL] Actualizando Firebase. Código HTTP: %d\n", httpResponseCode);
-    
+
     if (httpResponseCode == 200) {
       server.send(200, "text/plain", "OK");
-      notificarSistema(ENROL_OK); // Lanza el LED Verde y el Buzzer con pitido corto
+      notificarSistema(ENROL_OK);  // Lanza el LED Verde y el Buzzer con pitido corto
       Serial.printf("[ENROL] Éxito absoluto. Huella asignada al ID: %d\n", id);
     } else {
       server.send(200, "text/plain", "Error Firebase");
-      notificarSistema(ENROL_ERROR); // Lanza el LED Rojo y el Buzzer largo
+      notificarSistema(ENROL_ERROR);  // Lanza el LED Rojo y el Buzzer largo
     }
     http.end();
   } else {
     // Si las huellas no coinciden o falló el modelado
     server.send(200, "text/plain", "Fallo: Las huellas no coinciden");
-    notificarSistema(ENROL_ERROR); // Lanza el LED Rojo y el Buzzer largo
+    notificarSistema(ENROL_ERROR);  // Lanza el LED Rojo y el Buzzer largo
   }
 }
 
@@ -432,7 +446,7 @@ void handleDelete() {
   int httpCode = http.GET();
   if (httpCode == 200) {
     String payload = http.getString();
-    JsonDocument doc; 
+    JsonDocument doc;
     deserializeJson(doc, payload);
     int idSensor = doc["huellaId"];
     if (idSensor > 0 && idSensor <= 1000) {
@@ -440,19 +454,19 @@ void handleDelete() {
         Serial.printf("[DELETE] Removido ID %d de la memoria física del sensor\n", idSensor);
       }
     }
-    http.end(); 
-    
+    http.end();
+
     http.begin(client, urlUser);
     int deleteCode = http.sendRequest("DELETE");
     Serial.printf("[DELETE] Borrando en Firebase. Código HTTP: %d\n", deleteCode);
     if (deleteCode == 200 || deleteCode == 204) {
       server.send(200, "text/plain", "OK");
-      
+
       // CORREGIDO: Lógica directa para encender y apagar el LED Verde
-      digitalWrite(LED_VERDE, HIGH); // Enciende
+      digitalWrite(LED_VERDE, HIGH);  // Enciende
       delay(400);
       digitalWrite(LED_VERDE, LOW);  // Apaga
-      
+
       Serial.println("[DELETE] Alumno purgado del ecosistema.");
     } else {
       server.send(500, "text/plain", "Error al eliminar de Firebase");
@@ -498,30 +512,30 @@ void mostrarFechaHoraRTC() {
 void notificarSistema(TipoAlerta alerta) {
   switch (alerta) {
     case FICHADA_OK:
-      digitalWrite(LED_VERDE, HIGH); // Enciende
+      digitalWrite(LED_VERDE, HIGH);  // Enciende
       digitalWrite(BUZZER, HIGH);
-      delay(150); 
+      delay(150);
       digitalWrite(BUZZER, LOW);
-      delay(350); 
+      delay(350);
       digitalWrite(LED_VERDE, LOW);  // Apaga
       break;
 
     case FICHADA_ERROR:
       digitalWrite(LED_ROJO, HIGH);  // Enciende
       digitalWrite(BUZZER, HIGH);
-      delay(800); 
+      delay(800);
       digitalWrite(BUZZER, LOW);
-      digitalWrite(LED_ROJO, LOW);   // Apaga
+      digitalWrite(LED_ROJO, LOW);  // Apaga
       break;
 
     case OFFLINE_ALERTA:
       for (int i = 0; i < 3; i++) {
-        digitalWrite(LED_ROJO, HIGH); // Enciende
+        digitalWrite(LED_ROJO, HIGH);  // Enciende
         digitalWrite(BUZZER, HIGH);
         delay(600);
         digitalWrite(BUZZER, LOW);
         digitalWrite(LED_ROJO, LOW);  // Apaga
-        if (i < 2) delay(200); 
+        if (i < 2) delay(200);
       }
       break;
 
@@ -530,9 +544,9 @@ void notificarSistema(TipoAlerta alerta) {
       break;
 
     case ENROL_OK:
-      digitalWrite(LED_VERDE, HIGH); // Enciende
+      digitalWrite(LED_VERDE, HIGH);  // Enciende
       digitalWrite(BUZZER, HIGH);
-      delay(150); 
+      delay(150);
       digitalWrite(BUZZER, LOW);
       delay(400);
       digitalWrite(LED_VERDE, LOW);  // Apaga
@@ -541,9 +555,9 @@ void notificarSistema(TipoAlerta alerta) {
     case ENROL_ERROR:
       digitalWrite(LED_ROJO, HIGH);  // Enciende
       digitalWrite(BUZZER, HIGH);
-      delay(800); 
+      delay(800);
       digitalWrite(BUZZER, LOW);
-      digitalWrite(LED_ROJO, LOW);   // Apaga
+      digitalWrite(LED_ROJO, LOW);  // Apaga
       break;
   }
 }
