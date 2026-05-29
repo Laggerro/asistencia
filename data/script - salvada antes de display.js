@@ -75,23 +75,6 @@ const ipESP32 = window.location.host;
 // Función para ENROLAR (Llama al ESP32)
 window.enrolar = function (uid) {
     if (!confirm("¿Iniciar proceso de Registro en el sensor?")) return;
-
-    // 1. Buscar en la tabla web el elemento que contiene el nombre del alumno para este UID
-    // Para que funcione, asegúrate de que el botón o la fila de tu tabla tenga una forma de identificar el nombre.
-    // Una forma limpia y directa es buscar el texto de la primera celda (columna nombre) de la fila actual:
-    const boton = document.querySelector(`button[onclick="enrolar('${uid}')"]`);
-    const fila = boton.closest('tr');
-    const nombreAlumno = fila.cells[0].innerText.trim();
-
-    // 2. Codificamos el nombre para que viaje seguro por la URL (ej: "Juan Perez" -> "Juan%20Perez")
-    const nombreCodificado = encodeURIComponent(nombreAlumno);
-
-    // 3. Enviamos la petición al ESP32 incluyendo el parámetro '&nombre='
-    ejecutarAccion(`http://${ipESP32}/enrol?uid=${uid}&nombre=${nombreCodificado}`, "Registro exitoso");
-};
-
-window.enrolar = function (uid) {
-    if (!confirm("¿Iniciar proceso de Registro en el sensor?")) return;
     ejecutarAccion(`http://${ipESP32}/enrol?uid=${uid}`, "Registro exitoso");
 };
 
