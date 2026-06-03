@@ -151,10 +151,10 @@ void loop() {
           btAutenticado = true;
           ventanaAbierta = false;
 
-          SerialBT.printf("IP_LOCAL:[%s]\n", ipGuardada.c_str());
+          SerialBT.printf("IP_LOCAL,%s,%ld\n", ipGuardada.c_str(), desplazamiento);
           // Envía el desplazamiento actual a la App
           notificarSistema(ENROL_OK);
-          SerialBT.printf("OFFSET:[%ld]\n", desplazamiento);
+          // SerialBT.printf("OFFSET:[%ld]\n", desplazamiento);
           Serial.printf("[BT TX] Enviando IP: %s y Offset: %ld\n", ipGuardada.c_str(), desplazamiento);
         } else if (msg == "CORTARBT" && btAutenticado) {
           activarModoWifi();
@@ -165,22 +165,38 @@ void loop() {
             procesarFechaBT(msg);
           }
           // Captura "SET_OFFSET:[valor]"
+                  // Captura "SET_OFFSET:valor" o "SET_OFFSET:[valor]"
           else if (msg.startsWith("SET_OFFSET:")) {
+            String valStr = "";
             int c1 = msg.indexOf('[');
             int c2 = msg.indexOf(']');
+
             if (c1 != -1 && c2 != -1) {
-              String valStr = msg.substring(c1 + 1, c2);
+              // Si la App envía con corchetes: SET_OFFSET:[1500]
+              valStr = msg.substring(c1 + 1, c2);
+            } else {
+              // Si la App envía directo: SET_OFFSET:1500
+              int puntos = msg.indexOf(':');
+              valStr = msg.substring(puntos + 1);
+              valStr.trim(); // Elimina espacios o saltos de línea ocultos (\r, \n)
+            }
+
+            if (valStr.length() > 0) {
               desplazamiento = valStr.toInt();  // Guarda en RAM
 
               // Guarda permanentemente en Flash
-              prefs.begin("wifi-config", false);  // Modo escritura
+              prefs.begin("wifi-config", false);  // Modo lectura/escritura
               prefs.putLong("offset", desplazamiento);
               prefs.end();
 
               SerialBT.printf("OFFSET_OK:[%ld]\n", desplazamiento);
               Serial.printf("[BT] Nuevo desplazamiento guardado: %ld\n", desplazamiento);
+            } else {
+              Serial.println("[BT] Error: Valor de desplazamiento vacío");
             }
-          } else if (msg == "RESET") {
+          }
+
+           else if (msg == "RESET") {
             realizarResetTotal();
           }
         }
