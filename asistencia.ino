@@ -31,6 +31,7 @@ Preferences prefs;
 
 // VARIABLES GLOBALES
 String ssid, pass;
+String BTname = "Laggersoft";  // Nombre por defecto del BT
 String ipGuardada = "0.0.0.0";
 long desplazamiento = 0;
 unsigned long lastSync = 0;
@@ -103,6 +104,7 @@ void setup() {
   prefs.begin("wifi-config", true);
   ssid = prefs.getString("ssid", "Vilers-2");
   pass = prefs.getString("pass", "Pabada686");
+  BTname = prefs.getString("BTname", BTname);
   ipGuardada = prefs.getString("ip_local", "0.0.0.0");
   desplazamiento = prefs.getLong("offset", 0);
   prefs.end();
@@ -116,7 +118,8 @@ void setup() {
   }
 
   Serial.println("[BT] Modo Configuración Activado. Esperando comandos...");
-  SerialBT.begin("Laggersoft");
+  SerialBT.begin(BTname);
+  Serial.printf("[BT] Iniciado con el nombre: %s\n", BTname.c_str());
   btTimer = millis();
   lastFichadaTime = millis();
 
@@ -132,6 +135,8 @@ void setup() {
     server.streamFile(file, "text/html");
     file.close();
   });
+
+
 
   server.on("/get_users", handleGetUsers);
   server.on("/enrol", handleEnrol);
@@ -165,7 +170,7 @@ void loop() {
             procesarFechaBT(msg);
           }
           // Captura "SET_OFFSET:[valor]"
-                  // Captura "SET_OFFSET:valor" o "SET_OFFSET:[valor]"
+          // Captura "SET_OFFSET:valor" o "SET_OFFSET:[valor]"
           else if (msg.startsWith("SET_OFFSET:")) {
             String valStr = "";
             int c1 = msg.indexOf('[');
@@ -178,7 +183,7 @@ void loop() {
               // Si la App envía directo: SET_OFFSET:1500
               int puntos = msg.indexOf(':');
               valStr = msg.substring(puntos + 1);
-              valStr.trim(); // Elimina espacios o saltos de línea ocultos (\r, \n)
+              valStr.trim();  // Elimina espacios o saltos de línea ocultos (\r, \n)
             }
 
             if (valStr.length() > 0) {
@@ -194,9 +199,27 @@ void loop() {
             } else {
               Serial.println("[BT] Error: Valor de desplazamiento vacío");
             }
+
+            if (msg.startsWith("SETBT:")) {
+              String nuevoNombre = msg.substring(6);  // Corta el texto después de "SETBT:"
+              nuevoNombre.trim();                                 // Limpia espacios en blanco o saltos de línea
+
+              if (nuevoNombre.length() > 0) {
+                prefs.begin("wifi-config", false);  // Modo escritura (false)
+                prefs.putString("BTname", nuevoNombre);
+                prefs.end();
+                BTname = nuevoNombre;
+                Serial.printf("[PREFERENCES] Nuevo nombre BT guardado: %s\n", BTname.c_str());
+              } else {
+                SerialBT.println("Error: El nombre no puede estar vacío.");
+              }
+            }
+
+
+
           }
 
-           else if (msg == "RESET") {
+          else if (msg == "RESET") {
             realizarResetTotal();
           }
         }
@@ -234,30 +257,35 @@ void activarModoWifi() {
   Serial.println("[RADIO] Apagando Bluetooth de forma segura...");
   SerialBT.end();
   btActivo = false;
+
   Serial.printf("[RADIO] Encendiendo WiFi. Conectando a: %s\n", ssid.c_str());
   WiFi.mode(WIFI_STA);
   delay(100);
   WiFi.begin(ssid.c_str(), pass.c_str());
-  lastWifiRetry = millis() + 10000;
+
+  // CORREGIDO: Inicializamos el temporizador con el tiempo actual
+  lastWifiRetry = millis();
   server.begin();
   wifiIniciado = true;
 }
 
+
 void verificarConexion() {
-  static bool sonidoInicialEjecutado = false;  // Controla que el sonido de inicio suene UNA sola vez
+  static bool sonidoInicialEjecutado = false;
 
   if (WiFi.status() != WL_CONNECTED) {
-    // Si pasaron 10 segundos desde que inició y aún no tiene WiFi, se declara OFFLINE operativo
-    if (!sonidoInicialEjecutado && (millis() > 10000)) {
-      notificarSistema(SISTEMA_OFFLINE_LISTO);
-      Serial.println("[SISTEMA] Iniciado en modo OFFLINE (Sin internet).");
-      sonidoInicialEjecutado = true;
-    }
-
+    // CORREGIDO: El reintento ahora espera correctamente 20 segundos reales sin desbordarse
     if (millis() - lastWifiRetry > 20000) {
       lastWifiRetry = millis();
       Serial.println("[WIFI] Buscando red, reintentando conexión...");
       WiFi.begin(ssid.c_str(), pass.c_str());
+    }
+
+    // OPCIONAL/CORREGIDO: Solo declara OFFLINE si ya pasaron 20 segundos buscando sin éxito
+    if (!sonidoInicialEjecutado && (millis() - lastFichadaTime > 20000)) {
+      notificarSistema(SISTEMA_OFFLINE_LISTO);
+      Serial.println("[SISTEMA] No se logró conectar. Iniciado en modo OFFLINE.");
+      sonidoInicialEjecutado = true;
     }
   } else {
     static bool logConexion = false;
@@ -266,7 +294,6 @@ void verificarConexion() {
       Serial.print("[WIFI] ¡Conectado con éxito! Dirección IP: ");
       Serial.println(WiFi.localIP());
 
-      // <-- NUEVO: Si se conecta con éxito al iniciar, lanza el sonido ONLINE
       if (!sonidoInicialEjecutado) {
         notificarSistema(SISTEMA_ONLINE);
         Serial.println("[SISTEMA] Iniciado en modo ONLINE (Conectado a Firebase).");
@@ -275,7 +302,7 @@ void verificarConexion() {
 
       if (ipActual != ipGuardada) {
         ipGuardada = ipActual;
-        prefs.begin("wifi-config", false);  // Modo escritura
+        prefs.begin("wifi-config", false);
         prefs.putString("ip_local", ipGuardada);
         prefs.end();
         Serial.println("[PREFERENCES] Nueva dirección IP respaldada en Flash.");
@@ -284,7 +311,6 @@ void verificarConexion() {
     }
   }
 }
-
 
 void procesarWifiBT(String msg) {
   int c1 = msg.indexOf('['), c2 = msg.indexOf(']');
