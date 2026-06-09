@@ -159,7 +159,17 @@ void setup() {
     file.close();
   });
 
-
+   // ==========================================
+  // NUEVA RUTA PARA OBTENER EL OFFSET DESDE VARIABLE EN RAM
+  // ==========================================
+  server.on("/get-offset", HTTP_GET, []() {
+    // Añade CORS para evitar bloqueos del navegador en desarrollo
+    server.sendHeader("Access-Control-Allow-Origin", "*");
+    
+    // Responde directamente con el valor de la variable global en RAM
+    server.send(200, "text/plain", String(desplazamiento));
+  });
+  // ==========================================
 
   server.on("/get_users", handleGetUsers);
   server.on("/enrol", handleEnrol);
