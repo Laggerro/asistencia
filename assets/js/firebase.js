@@ -5,6 +5,7 @@ import {
     ref,
     push,
     get,
+    set,
     update,
     remove,
     query,
@@ -34,9 +35,13 @@ const nodoAlumnos = "tbl_alumnos";
 
 /** 
  * --- SECCIÓN CURSOS ---
- */
+ 
 export const addCurso = (curso, horaIn, ubicacion, capacidad, obs, preceptorID) =>
     push(ref(db, coleccionCursos), { curso, horaIn, ubicacion, capacidad, obs, preceptorID });
+*/
+
+export const addCurso = (cursoId, curso, horaIn, ubicacion, capacidad, obs, preceptorID) =>
+    set(ref(db, `${coleccionCursos}/${cursoId}`), { curso, horaIn, ubicacion, capacidad, obs, preceptorID });
 
 export const getCursosCollection = () => get(ref(db, coleccionCursos));
 
