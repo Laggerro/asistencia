@@ -223,44 +223,35 @@ async function cargarPreceptoresEnModal() {
 
 /**
  * 4. EVENTOS DE CREACIÓN Y ACTUALIZACIÓN
- 
 
+*/
 window.addNuevoCurso = async function (event) {
     event.preventDefault();
     const form = document.querySelector("#formularioCursoEdit");
     const fd = new FormData(form);
     const preceptorID = fd.get("preceptorID");
-
     if (!preceptorID) return alert("Seleccione un preceptor");
 
+    // Genera un ID basado en el timestamp actual
+    const cursoId = Date.now().toString();
+
     try {
-        await addCurso(fd.get("curso"), fd.get("horaIn"), fd.get("ubicacion"), fd.get("capacidad"), fd.get("obsCurso"), preceptorID);
+
+        await addCurso(
+            cursoId,
+            fd.get("curso"),
+            fd.get("horaIn"),
+            fd.get("ubicacion"),
+            fd.get("capacidad"),
+            fd.get("obsCurso"),
+            preceptorID
+        );
+
         bootstrap.Modal.getInstance(document.getElementById('agregarCursoModal')).hide();
         await mostrarCursosEnHTML();
         window.mostrarAlerta({ tipoToast: "success", mensaje: "¡Curso creado!" });
-    } catch (e) { console.error(e); }
-};
-*/
-window.addNuevoCurso = async function (event) {
-   event.preventDefault();
-    const form = document.querySelector("#formularioCursoEdit");
-    const fd = new FormData(form);
-    const preceptorID = fd.get("preceptorID");
-
-    if (!preceptorID) return alert("Seleccione un preceptor");
-
-    // Genera un ID basado en el timestamp actual (ej: 1718028483921)
-    const cursoId = Date.now().toString(); 
-
-    try {
-        // Llamada a la nueva función pasando el cursoId como primer argumento
-        await addNuevoCurso(cursoId, fd.get("curso"), fd.get("horaIn"), fd.get("ubicacion"), fd.get("capacidad"), fd.get("obsCurso"), preceptorID);
-        
-        bootstrap.Modal.getInstance(document.getElementById('agregarCursoModal')).hide();
-        await mostrarCursosEnHTML();
-        window.mostrarAlerta({ tipoToast: "success", mensaje: "¡Curso creado!" });
-    } catch (e) { 
-        console.error(e); 
+    } catch (e) {
+        console.error(e);
         window.mostrarAlerta({ tipoToast: "danger", mensaje: "Error al crear el curso" });
     }
 };
